@@ -4,31 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Redirecting to Photo Memory...</title>
-<script>
-  (function () {
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
+  <script>
+    (function () {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isAndroid = /android/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS fix
 
-    const isAndroid = /android/i.test(ua);
-    const isIOS = /iPad|iPhone|iPod/.test(ua) ||
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS fix
-
-    if (isAndroid) {
-      // Android: try intent link
-      window.location.href = "intent://photo-memory#Intent;scheme=app;package=com.XanderDevelops.PhotographicMemory;end;";
-    } else if (isIOS) {
-      // iOS: use custom scheme, fallback to App Store
-      window.location.href = "photo-memory://";
-
-      setTimeout(() => {
-        window.location.href = "https://apps.apple.com/mw/app/photographic-memory-mind-test/id6578423386";
-      }, 2500);
-    } else {
-      // Desktop fallback
-      window.location.href = "https://photo-memory-eta.vercel.app/";
-    }
-  })();
-</script>
-
+      if (isAndroid) {
+        window.location.href = "intent://photo-memory#Intent;scheme=app;package=com.XanderDevelops.PhotographicMemory;end;";
+      } else if (isIOS) {
+        window.location.href = "photo-memory://";
+        setTimeout(() => {
+          window.location.href = "https://apps.apple.com/mw/app/photographic-memory-mind-test/id6578423386";
+        }, 2500);
+      } else {
+        window.location.href = "https://photo-memory-eta.vercel.app/";
+      }
+    })();
+  </script>
 </head>
 <body>
   <p style="text-align:center; margin-top: 3rem;">Redirecting to <strong>Photo Memory</strong>...</p>
