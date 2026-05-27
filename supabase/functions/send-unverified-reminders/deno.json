@@ -1,6 +1,0 @@
-{
-  "tasks": {
-    "serve": "supabase functions serve send-unverified-reminders"
-  },
-  "imports": {}
-}
