@@ -227,6 +227,32 @@ function profileColumns() {
   ].join(',');
 }
 
+function legacyProfileColumns() {
+  return [
+    'id',
+    'username',
+    'is_pro',
+    'current_streak',
+    'longest_streak',
+    ...Object.keys(HIGHSCORE_FIELDS)
+  ].join(',');
+}
+
+function leaderboardColumns() {
+  return [
+    'id',
+    'username',
+    'current_streak',
+    'longest_streak',
+    ...Object.keys(HIGHSCORE_FIELDS)
+  ].join(',');
+}
+
+function isMissingDatabaseObjectError(error) {
+  const message = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+  return error?.code === '42P01' || /not found|does not exist|schema cache/i.test(message);
+}
+
 async function fileToUploadPayload(file) {
   if (!file) return null;
   const dataUrl = await new Promise((resolve, reject) => {
@@ -247,11 +273,22 @@ async function loadCurrentProfile() {
   const user = state.session?.user;
   if (!user) return null;
 
-  const { data, error } = await client
+  let { data, error } = await client
     .from('user_profiles')
     .select(profileColumns())
     .eq('id', user.id)
     .maybeSingle();
+
+  if (error && isMissingDatabaseObjectError(error)) {
+    const legacyResult = await client
+      .from('user_profiles')
+      .select(legacyProfileColumns())
+      .eq('id', user.id)
+      .maybeSingle();
+
+    data = legacyResult.data;
+    error = legacyResult.error;
+  }
 
   if (error) {
     toast(`Could not load your profile: ${error.message}`, true);
@@ -297,17 +334,23 @@ async function loadLeaderboardData() {
   const pageSize = 1000;
   let from = 0;
   state.leaderboardError = '';
+  let source = 'leaderboard_profiles';
 
   while (true) {
     const { data, error } = await client
-      .from('leaderboard_profiles')
-      .select(`id,username,current_streak,longest_streak,${Object.keys(HIGHSCORE_FIELDS).join(',')}`)
+      .from(source)
+      .select(leaderboardColumns())
       .range(from, from + pageSize - 1);
 
     if (error) {
-      state.leaderboardError = error.code === '42P01' || /not found|does not exist/i.test(error.message || '')
-        ? 'Leaderboard view is not deployed in Supabase yet. Run the migration that creates public.leaderboard_profiles.'
-        : `Could not load leaderboard: ${error.message}`;
+      if (source === 'leaderboard_profiles' && isMissingDatabaseObjectError(error)) {
+        source = 'user_profiles';
+        rows.length = 0;
+        from = 0;
+        continue;
+      }
+
+      state.leaderboardError = `Could not load leaderboard: ${error.message}`;
       state.leaderboardUsers = state.currentProfile ? [state.currentProfile] : [];
       return;
     }
@@ -318,6 +361,55 @@ async function loadLeaderboardData() {
   }
 
   state.leaderboardUsers = rows;
+}
+
+async function loadLeaderboardProfileById(userId) {
+  if (!userId) return null;
+
+  const existing = state.leaderboardUsers.find((user) => user.id === userId);
+  if (existing) return existing;
+
+  const { data, error } = await client
+    .from('user_profiles')
+    .select(leaderboardColumns())
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function lookupComparisonProfile(email) {
+  const { data, error } = await client
+    .rpc('lookup_leaderboard_profile_by_email', { email_to_find: email })
+    .maybeSingle();
+
+  if (!error) return data;
+
+  const missingNewLookup = isMissingDatabaseObjectError(error)
+    || /lookup_leaderboard_profile_by_email|404/i.test(`${error.message || ''} ${error.details || ''}`);
+
+  if (!missingNewLookup) throw error;
+
+  const { data: legacyData, error: legacyError } = await client
+    .rpc('lookup_user_by_email', { email_to_find: email })
+    .maybeSingle();
+
+  if (legacyError) {
+    const missingLegacyLookup = isMissingDatabaseObjectError(legacyError)
+      || /lookup_user_by_email|404/i.test(`${legacyError.message || ''} ${legacyError.details || ''}`);
+
+    if (missingLegacyLookup) {
+      throw new Error('Email comparison lookup is not deployed yet. Run the latest Supabase migration.');
+    }
+
+    throw legacyError;
+  }
+
+  if (!legacyData?.id) return null;
+
+  const profile = await loadLeaderboardProfileById(legacyData.id);
+  return { ...(profile || {}), ...legacyData };
 }
 
 async function loadUserDashboard() {
@@ -699,15 +791,11 @@ async function comparePlayerByEmail(rawEmail) {
     return;
   }
 
-  const { data, error } = await client
-    .rpc('lookup_leaderboard_profile_by_email', { email_to_find: email })
-    .maybeSingle();
-
-  if (error) {
-    const missingFunction = /lookup_leaderboard_profile_by_email|not found|does not exist|404/i.test(`${error.message || ''} ${error.details || ''}`);
-    toast(missingFunction
-      ? 'Email comparison lookup is not deployed yet. Push the latest Supabase migration.'
-      : `Could not compare that player: ${error.message}`, true);
+  let data = null;
+  try {
+    data = await lookupComparisonProfile(email);
+  } catch (error) {
+    toast(`Could not compare that player: ${error.message}`, true);
     return;
   }
 
