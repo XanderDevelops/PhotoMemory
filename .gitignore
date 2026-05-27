@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+electron-admin/node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Build output and caches
+dist/
+build/
+coverage/
+.cache/
+
+# Supabase local runtime files. Keep supabase/functions and supabase/migrations tracked.
+.supabase/
+supabase/.branches/
+supabase/.temp/
+supabase/.cache/
+
+# Logs and OS files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db

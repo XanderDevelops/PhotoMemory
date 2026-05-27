@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Memory Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <section id="login-view" class="login-shell">
+    <form id="login-form" class="login-card">
+      <img src="../assets/logo.png" alt="Photo Memory logo" />
+      <p class="eyebrow">Player dashboard</p>
+      <h1>Photo Memory</h1>
+      <div id="email-step" class="login-step">
+        <label>
+          Email
+          <input id="login-email" type="email" autocomplete="email" required />
+        </label>
+        <button id="send-otp-btn" type="submit">Send code</button>
+      </div>
+      <div id="otp-step" class="login-step" hidden>
+        <p class="muted">Enter the 6-digit code sent to <strong id="otp-email-display"></strong>.</p>
+        <div class="otp-grid" aria-label="One time password">
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 1" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 2" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 3" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 4" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 5" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 6" />
+        </div>
+        <button id="verify-otp-btn" type="button">Verify code</button>
+        <button id="change-email-btn" type="button" class="secondary-button">Use another email</button>
+      </div>
+      <p id="login-error" class="form-error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app-view" class="app-shell" hidden>
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="../index.html">
+        <img src="../assets/logo.png" alt="" />
+        <span>Photo Memory</span>
+      </a>
+      <div class="admin-card">
+        <span id="admin-role">Admin</span>
+        <strong id="admin-name">Loading...</strong>
+        <small id="admin-email"></small>
+      </div>
+      <nav class="side-nav" aria-label="Admin sections">
+        <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="history">Test History</button>
+        <button data-tab="highscores">High Scores</button>
+        <button data-tab="leaderboard">Leaderboard</button>
+        <button data-admin-only data-tab="users" hidden>All Users</button>
+        <button data-admin-only data-tab="mail" hidden>Mail Studio</button>
+        <button data-admin-only data-tab="notifications" hidden>Notifications</button>
+        <button data-admin-only data-tab="daily" hidden>Daily Challenges</button>
+        <button data-admin-only data-tab="contextual" hidden>Contextual Memory</button>
+      </nav>
+      <button id="logout-btn" class="ghost-button">Logout</button>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-header">
+        <button id="menu-btn" class="icon-button" aria-label="Toggle menu">Menu</button>
+        <div>
+          <p class="eyebrow">Photo Memory dashboard</p>
+          <h1 id="page-title">Overview</h1>
+        </div>
+        <div class="workspace-actions">
+          <button id="export-report-btn" class="secondary-button">Export report</button>
+          <button id="refresh-btn" class="secondary-button">Refresh</button>
+        </div>
+      </header>
+
+      <p id="toast" class="toast" hidden></p>
+
+      <section id="overview-panel" class="panel active">
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span>Current streak</span>
+            <strong id="metric-current-streak">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Best streak</span>
+            <strong id="metric-longest-streak">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Average score</span>
+            <strong id="metric-average-score">0</strong>
+          </article>
+          <article class="metric-card">
+            <span>Tests logged</span>
+            <strong id="metric-tests">0</strong>
+          </article>
+        </div>
+
+        <div class="overview-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Latest activity</p>
+                <h2>Recent tests</h2>
+              </div>
+              <button class="secondary-button" data-jump="history">View all</button>
+            </div>
+            <div id="recent-tests-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Personal bests</p>
+                <h2>Top high scores</h2>
+              </div>
+              <button class="secondary-button" data-jump="highscores">View all</button>
+            </div>
+            <div id="top-highscores-list" class="compact-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="history-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Your progress</p>
+              <h2>Test History</h2>
+            </div>
+          </div>
+          <div id="history-list" class="compact-list"></div>
+        </div>
+      </section>
+
+      <section id="highscores-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Game modes</p>
+              <h2>High Scores</h2>
+            </div>
+          </div>
+          <div class="comparison-controls">
+            <label>Compare with a player's email
+              <input id="compare-player-email" type="email" placeholder="player@example.com" />
+            </label>
+            <button id="compare-player-btn" class="secondary-button" type="button">Compare</button>
+            <button id="clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+          </div>
+          <div id="comparison-summary" class="comparison-summary"></div>
+
+          <section class="score-section">
+            <div>
+              <p class="eyebrow">Memory type-based games</p>
+              <h3>Visual memory modes</h3>
+            </div>
+            <div id="memory-highscores-grid" class="highscore-grid"></div>
+          </section>
+
+          <section class="score-section">
+            <div>
+              <p class="eyebrow">Classics</p>
+              <h3>Core memory drills</h3>
+            </div>
+            <div id="classic-highscores-grid" class="highscore-grid"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="users-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Audience</p>
+              <h2>Users</h2>
+            </div>
+            <div class="row-actions">
+              <button id="email-selected-btn" class="secondary-button">Email selected</button>
+              <button id="notify-selected-btn" class="secondary-button">Notify selected</button>
+            </div>
+          </div>
+
+          <div class="filter-grid">
+            <label>Search<input id="user-search" type="search" placeholder="Name or email" /></label>
+            <label>Status
+              <select id="verified-filter">
+                <option value="all">All users</option>
+                <option value="verified">Verified only</option>
+                <option value="unverified">Unverified only</option>
+                <option value="blocked">Blocked only</option>
+              </select>
+            </label>
+            <label>Min streak<input id="min-streak-filter" type="number" min="0" placeholder="0" /></label>
+            <label>Joined after<input id="joined-after-filter" type="date" /></label>
+            <label>Joined before<input id="joined-before-filter" type="date" /></label>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input id="select-all-users" type="checkbox" aria-label="Select all visible users" /></th>
+                  <th>User</th>
+                  <th>Status</th>
+                  <th>Streak</th>
+                  <th>Joined</th>
+                  <th>Emails</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+            <div id="users-pagination" class="pagination-controls users-pagination-row">
+              <span id="users-pagination-info" class="muted">Showing 0-0 of 0</span>
+              <div class="row-actions users-pagination-actions">
+                <button id="users-prev-page-btn" class="secondary-button" type="button">Previous</button>
+                <button id="users-next-page-btn" class="secondary-button" type="button">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mail-panel" class="panel">
+        <div class="surface mail-studio">
+          <div class="section-heading mail-studio-heading">
+            <div>
+              <p class="eyebrow">Campaigns</p>
+              <h2>Mail Studio</h2>
+              <p class="muted">Design emails, load presets, send reminders, and build templates with the AI helper.</p>
+            </div>
+          </div>
+
+          <div class="mail-studio-grid">
+            <section class="mail-composer">
+              <div class="mail-panel-card mail-presets-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">Presets</p>
+                    <h3>Email templates</h3>
+                  </div>
+                  <span class="preset-count" id="mail-preset-count">0</span>
+                </div>
+                <div id="mail-preset-list" class="mail-preset-list"></div>
+                <div class="mail-preset-save">
+                  <label>Preset name
+                    <input id="mail-preset-name" type="text" placeholder="New preset name" />
+                  </label>
+                  <button id="save-preset-btn" class="secondary-button" type="button">Save preset</button>
+                </div>
+              </div>
+
+              <div class="mail-panel-card">
+                <label>Subject
+                  <input id="mail-subject" type="text" value="A note from Photo Memory" />
+                </label>
+
+                <div class="editor-header">
+                  <div class="editor-toolbar">
+                    <button data-format="bold" title="Bold" type="button">B</button>
+                    <button data-format="italic" title="Italic" type="button">I</button>
+                    <button data-format="insertUnorderedList" title="Bullet list" type="button">List</button>
+                    <button data-format="createLink" title="Link" type="button">Link</button>
+                  </div>
+                  <button id="toggle-editor-mode-btn" class="secondary-button" type="button">HTML</button>
+                </div>
+
+                <div id="mail-editor" class="rich-editor mail-rich-editor" contenteditable="true">
+                  <h2>Hello from Photo Memory</h2>
+                  <p>We have something new ready for you.</p>
+                </div>
+                <textarea id="mail-editor-source" class="rich-editor mail-source-editor" placeholder="HTML source code"></textarea>
+              </div>
+
+              <div class="mail-panel-card mail-options-card">
+                <div class="mail-file-grid">
+                  <label>Attachments
+                    <input id="mail-attachments-file" type="file" multiple />
+                    <span id="mail-attachments-status" class="muted">No attachments</span>
+                  </label>
+                  <label>Inline images
+                    <input id="mail-images-file" type="file" accept="image/*" multiple />
+                    <span id="mail-images-status" class="muted">No inline images</span>
+                  </label>
+                </div>
+
+                <div class="toggle-stack">
+                  <label class="toggle-row">
+                    <input id="mail-automate" type="checkbox" />
+                    <span>Automate recurring delivery</span>
+                  </label>
+                  <label class="toggle-row">
+                    <input id="mail-send-push" type="checkbox" />
+                    <span>Send matching in-app notification</span>
+                  </label>
+                </div>
+
+                <div id="mail-push-details" class="mail-push-details">
+                  <label>Push title
+                    <input id="mail-push-title" type="text" placeholder="New memory training available!" />
+                  </label>
+                  <label>Push message
+                    <input id="mail-push-body" type="text" placeholder="Log in now to see what's new." />
+                  </label>
+                </div>
+
+                <div class="send-grid mail-send-grid">
+                  <label>Audience
+                    <select id="mail-audience">
+                      <option value="selected">Selected users</option>
+                      <option value="filtered">Current filtered users</option>
+                      <option value="unverified">Unverified users</option>
+                      <option value="all">All users</option>
+                    </select>
+                  </label>
+                  <button id="send-mail-btn">Send campaign</button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="mail-side-panel">
+              <section class="mail-panel-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">AI assistant</p>
+                    <h3>ChatGPT Mail Prompter</h3>
+                  </div>
+                </div>
+                <label>Email theme
+                  <textarea id="mail-ai-desc" rows="3" placeholder="Welcome email with 3 memory tips and streak advice."></textarea>
+                </label>
+                <button id="generate-ai-prompt-btn" class="secondary-button" type="button">Copy ChatGPT prompt</button>
+
+                <label>Paste ChatGPT response
+                  <textarea id="mail-ai-response" rows="5" placeholder="Paste a response containing <TO COPY>...html...</TO COPY> tags."></textarea>
+                </label>
+                <button id="extract-ai-mail-btn" class="secondary-button" type="button">Extract HTML</button>
+              </section>
+
+              <section class="mail-panel-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">Delivery studio</p>
+                    <h3>Unverified reminders</h3>
+                  </div>
+                </div>
+                <p class="muted">Preview or send the same Edge Function template used by the built-in preset.</p>
+                <div class="mail-action-grid">
+                  <button id="preview-unverified-email-btn" class="secondary-button" type="button">Preview</button>
+                  <button id="send-unverified-email-btn" class="secondary-button" type="button">Send reminders</button>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="notifications-panel" class="panel">
+        <div class="surface editor-layout">
+          <div>
+            <p class="eyebrow">In-app notifications</p>
+            <h2>Create notification</h2>
+            <p class="muted">This writes notification records now, so the game can render them when you integrate the inbox.</p>
+          </div>
+          <label>Title<input id="notification-title" type="text" placeholder="New challenge ready" /></label>
+          <label>Message<textarea id="notification-body" rows="4" placeholder="Tell players what changed..."></textarea></label>
+          <label>Optional link<input id="notification-link" type="url" placeholder="https://..." /></label>
+          <div class="send-grid">
+            <label>Audience
+              <select id="notification-audience">
+                <option value="selected">Selected users</option>
+                <option value="filtered">Current filtered users</option>
+                <option value="all">All users</option>
+              </select>
+            </label>
+            <button id="create-notification-btn">Queue notification</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="leaderboard-panel" class="panel">
+        <div class="leaderboard-shell">
+          <div class="leaderboard-header">
+            <div>
+              <p class="eyebrow">Challenge your friends</p>
+              <p>See how you rank against other players. More tests and higher scores improve your standing.</p>
+            </div>
+            <span id="leaderboard-current-rank" class="leaderboard-current-rank">Your rank is loading...</span>
+          </div>
+
+          <p id="leaderboard-warning" class="leaderboard-warning" hidden></p>
+
+          <div class="leaderboard-stats">
+            <article>
+              <span>Total Players</span>
+              <strong id="leaderboard-total-players">0</strong>
+            </article>
+            <article>
+              <span>Total Tests</span>
+              <strong id="leaderboard-total-tests">0</strong>
+            </article>
+            <article>
+              <span>Top Score</span>
+              <strong id="leaderboard-top-score">0</strong>
+            </article>
+          </div>
+
+          <div class="leaderboard-tools">
+            <label>Compare leaderboard with a player's email
+              <input id="leaderboard-compare-email" type="email" placeholder="player@example.com" />
+            </label>
+            <button id="leaderboard-compare-btn" class="secondary-button" type="button">Compare</button>
+          </div>
+          <div id="leaderboard-comparison" class="comparison-summary dark"></div>
+
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Name</th>
+                  <th>Tests</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="daily-panel" class="panel">
+        <div class="builder-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Daily scenes</p>
+                <h2>Daily Challenges</h2>
+              </div>
+              <button id="new-daily-btn" class="secondary-button">New challenge</button>
+            </div>
+            <div id="daily-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="daily-form" class="builder-form">
+              <input id="daily-id" type="hidden" />
+              <h2 id="daily-form-title">New challenge</h2>
+              <label>Date<input id="daily-date" type="date" required /></label>
+              <label>Image path<input id="daily-image-path" type="text" placeholder="Optional existing storage path" /></label>
+              <label>Upload image<input id="daily-image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+              <div id="daily-image-preview" class="image-preview">No image selected</div>
+              <div class="section-heading compact-heading">
+                <h3>Questions</h3>
+                <button id="add-daily-question-btn" type="button" class="secondary-button">Add question</button>
+              </div>
+              <div id="daily-questions"></div>
+              <button type="submit">Save daily challenge</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="contextual-panel" class="panel">
+        <div class="builder-grid wide-builder">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Contextual memory</p>
+                <h2>Levels</h2>
+              </div>
+              <button id="new-contextual-btn" class="secondary-button">New level</button>
+            </div>
+            <div id="contextual-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="contextual-form" class="builder-form">
+              <input id="contextual-id" type="hidden" />
+              <h2 id="contextual-form-title">New level</h2>
+              <div class="two-col">
+                <label>Level name<input id="contextual-level-name" type="text" required /></label>
+                <label>Questions to ask<input id="contextual-question-count" type="number" min="1" value="5" required /></label>
+              </div>
+              <div class="section-heading compact-heading">
+                <h3>Variations</h3>
+                <button id="add-variation-btn" type="button" class="secondary-button">Add variation</button>
+              </div>
+              <div id="variations-container"></div>
+              <button type="submit">Save contextual level</button>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <dialog id="email-dialog">
+    <form method="dialog" class="modal-card">
+      <h2>Send email</h2>
+      <p id="email-dialog-recipient" class="muted"></p>
+      <label>Subject<input id="dialog-email-subject" type="text" /></label>
+      <label>Message<textarea id="dialog-email-body" rows="8"></textarea></label>
+      <div class="modal-actions">
+        <button value="cancel" class="secondary-button">Cancel</button>
+        <button id="dialog-send-email-btn" value="default">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="preview-email-dialog">
+    <form method="dialog" class="modal-card preview-modal">
+      <h2>Unverified Email Preview</h2>
+      <p class="muted">Rendered by the admin Edge Function using the same template that sends the reminder.</p>
+      <iframe id="preview-email-frame" title="Unverified email preview"></iframe>
+      <div class="modal-actions">
+        <button value="cancel" class="secondary-button">Close</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

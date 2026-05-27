@@ -2,40 +2,94 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Photo Memory — Brain Training Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Memory</title>
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
-  <header>
-    <img src="assets/logo.png" alt="Photo Memory Logo" class="logo"/>
-    <h1>Photo Memory</h1>
-    <p class="tagline">Train Your Mind. Sharpen Your Sight.</p>
+  <header class="site-hero">
+    <nav class="topbar" aria-label="Primary">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.png" alt="Photo Memory logo" />
+        <span>Photo Memory</span>
+      </a>
+      <div class="nav-actions">
+        <a href="dashboard/">Dashboard</a>
+        <a class="button button-dark" href="https://play.google.com/store/apps/details?id=com.XanderDevelops.PhotographicMemory">Google Play</a>
+        <a class="button button-gold" href="https://apps.apple.com/mw/app/photographic-memory-mind-test/id6578423386">App Store</a>
+      </div>
+    </nav>
+
+    <div class="hero-grid">
+      <section class="hero-copy">
+        <p class="eyebrow">Visual recall training</p>
+        <h1>Photo Memory</h1>
+        <p class="lede">
+          Fast memory games, daily challenges, and progress tracking wrapped in a playful arcade style.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-dark" href="https://play.google.com/store/apps/details?id=com.XanderDevelops.PhotographicMemory">Get it on Google Play</a>
+          <a class="button button-outline" href="https://apps.apple.com/mw/app/photographic-memory-mind-test/id6578423386">Download on App Store</a>
+        </div>
+      </section>
+
+      <section class="phone-panel" aria-label="Photo Memory game preview">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="game-header">
+              <span>Exit</span>
+              <span>Photo Memory</span>
+              <span>Info</span>
+            </div>
+            <div class="score-card">
+              <span>Average Score</span>
+              <strong>1104</strong>
+            </div>
+            <div class="mini-chart" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="game-menu">
+              <a href="dashboard/">Stats Dashboard</a>
+              <a href="dashboard/#leaderboard">Leaderboard</a>
+              <a href="dashboard/#daily">Daily Challenges</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </header>
 
   <main>
-    <section class="download">
-      <div class="store-buttons">
-        <a href="https://play.google.com/store/apps/details?id=com.XanderDevelops.PhotographicMemory" class="store-btn">📱 Google Play</a>
-        <a href="https://apps.apple.com/mw/app/photographic-memory-mind-test/id6578423386" class="store-btn">🍎 App Store</a>
+    <section class="feature-band">
+      <article>
+        <h2>Daily memory scenes</h2>
+        <p>New image-based questions help players notice details, recall context, and build streaks.</p>
+      </article>
+      <article>
+        <h2>Contextual levels</h2>
+        <p>Evidence scenes, variations, and answer sets can be managed from the admin dashboard.</p>
+      </article>
+      <article>
+        <h2>Progress that feels alive</h2>
+        <p>Scores, streaks, leaderboards, and high scores are organized for quick scanning.</p>
+      </article>
+    </section>
+
+    <section class="about">
+      <div>
+        <p class="eyebrow">Built by Xander Develops</p>
+        <h2>A small game with a focused loop.</h2>
       </div>
-    </section>
-
-    <section class="about-app">
-      <h2>🧠 About the App</h2>
-      <p><strong>Photo Memory</strong> is a brain-training game with quick, challenging tasks that sharpen your visual recall, attention, and cognitive focus. It's designed to help you improve through fun repetition.</p>
-      <p><em>Disclaimer:</em> There's no evidence the games will actually improve your memory — this was done purely for fun and entertainment.</p>
-    </section>
-
-    <section class="about-dev">
-      <h2>🎬 About Xander Develops</h2>
-      <p>I'm <strong>Xander</strong> — developer, designer, and game lover. I created Photo Memory to bring cognitive challenges and fun together in one app. <br/>Check out my YouTube channel to see how I build apps like this from scratch.</p>
-      <a href="https://www.youtube.com/@XanderDevelops" class="youtube-link">📺 Visit Xander Develops on YouTube</a>
+      <p>
+        Photo Memory is made for entertainment and playful brain training. Results are not medical claims,
+        just a fun way to challenge your eyes and memory for a few minutes a day.
+      </p>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Xander Develops. All rights reserved.</p>
+    <span>&copy; 2026 Xander Develops</span>
+    <a href="https://www.youtube.com/@XanderDevelops">YouTube</a>
   </footer>
 </body>
 </html>

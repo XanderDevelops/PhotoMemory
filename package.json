@@ -1,0 +1,11 @@
+{
+  "name": "photo-memory-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "electron": "npm --prefix electron-admin start",
+    "check": "node --check dashboard/app.js && node --check server.js && node --check electron-admin/main.js && node --check electron-admin/preload.js && node --check electron-admin/renderer/renderer.js"
+  }
+}

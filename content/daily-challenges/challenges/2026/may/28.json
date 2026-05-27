@@ -1,0 +1,142 @@
+{
+  "challenge_date": "2026-05-28",
+  "image_path": "2026/may/28.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\may\\28.png",
+  "created_at": "2026-05-26T23:14:23.205Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A cheerful vintage rubberhose-style neighborhood flower shop at golden hour, colorful cartoony 1930s-inspired animation aesthetic, warm glowing sunlight, playful exaggerated shapes, consistent retro palette, clean and easy-to-remember composition. In the center: a small mint-green wooden table holding exactly three potted flowers — one red tulip, one yellow sunflower, and one purple daisy. Beside the flower pots sits a blue watering can with a long curved spout. On the left side: a striped orange-and-cream awning above the shop window. Under the awning are exactly two wooden crates filled with oranges and green apples. Leaning against the crates is a tiny black bicycle with a wicker basket. On the right side: a sleepy cream-colored cat curled up on a round red cushion. Behind the table is a large open window showing a pink sunset sky with three fluffy clouds. Hanging from the ceiling is a single glowing lantern with warm yellow light. The floor is made of black-and-white checkerboard tiles with one cracked tile near the bottom-left corner. Clean framing, charming retro cartoon atmosphere, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "What color was the watering can on the table?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Blue",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What animal was sleeping on the red cushion?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "A rabbit",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A puppy",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A cream-colored cat",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A hamster",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "How many flower pots were on the mint-green table?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "Five",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Three",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Two",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Four",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was leaning beside the wooden crates?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "A broom",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A black bicycle",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A skateboard",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A ladder",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What pattern covered the shop floor?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "Wood planks",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Blue stripes",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Black-and-white checkerboard tiles",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Red carpet",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What could be seen in the sunset sky through the window?",
+      "order_index": 5,
+      "answers": [
+        {
+          "answer_text": "Three fluffy clouds",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A rainbow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A hot air balloon",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Two stars",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

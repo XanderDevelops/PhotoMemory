@@ -1,0 +1,7 @@
+project_id = "kzeeojfmvrvleahzdmnl"
+
+[functions.admin-api]
+verify_jwt = false
+
+[functions.send-unverified-reminders]
+verify_jwt = false

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Memory Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="desktop-bar">
+    <div>
+      <p class="eyebrow">Desktop admin</p>
+      <h1>Photo Memory</h1>
+    </div>
+    <div class="bar-actions">
+      <button id="reload-dashboard-btn">Reload dashboard</button>
+      <button id="toggle-chat-btn">Toggle ChatGPT</button>
+    </div>
+  </header>
+
+  <main class="desktop-grid">
+    <section class="dashboard-pane">
+      <webview id="dashboard-view" partition="persist:photo-memory-admin"></webview>
+    </section>
+
+    <div id="drag-divider-vertical" class="drag-divider-vertical"></div>
+
+    <aside id="assistant-pane" class="assistant-pane">
+      <section class="tool-card">
+        <p class="eyebrow">Daily challenge generator</p>
+        <h2>ChatGPT queue</h2>
+        <p class="muted">
+          Send image and question prompts to the ChatGPT browser, save image downloads into the date folder, and store challenge JSON locally.
+        </p>
+        <div class="field-row">
+          <input id="images-root" readonly />
+          <button id="pick-root-btn">Folder</button>
+        </div>
+        <div class="tool-actions">
+          <button id="scan-btn">Scan</button>
+          <button id="copy-prompt-btn">Copy full prompt</button>
+        </div>
+        <div id="scan-summary" class="summary"></div>
+        <label>
+          Missing dates
+          <select id="missing-date-select"></select>
+        </label>
+        <label>
+          Date to load or create
+          <input id="challenge-date" type="date" />
+        </label>
+        <div class="field-row">
+          <label>
+            Amount
+            <input id="generate-count" type="number" min="1" max="365" value="5" />
+          </label>
+          <label>
+            Every
+            <input id="schedule-amount" type="number" min="1" value="5" />
+          </label>
+          <label>
+            Unit
+            <select id="schedule-unit">
+              <option value="minutes">Minutes</option>
+              <option value="hours">Hours</option>
+            </select>
+          </label>
+        </div>
+        <label class="check-row">
+          <input id="schedule-unlimited" type="checkbox" />
+          Keep creating while the app is open
+        </label>
+        <div class="tool-actions">
+          <button id="send-scene-prompt-btn">Send scene prompt</button>
+          <button id="capture-scene-prompt-btn">Capture scene</button>
+        </div>
+        <textarea id="scene-prompt" rows="5" placeholder="ChatGPT's scene/image prompt appears here"></textarea>
+        <div class="tool-actions">
+          <button id="send-image-prompt-btn">Generate image</button>
+          <button id="send-questions-prompt-btn">Send questions prompt</button>
+        </div>
+        <div class="tool-actions">
+          <button id="start-queue-btn">Start auto queue</button>
+          <button id="stop-queue-btn">Stop</button>
+          <button id="load-challenge-btn">Load date</button>
+        </div>
+        <textarea id="prompt-preview" readonly rows="7"></textarea>
+        <div class="field-row">
+          <input id="source-image" readonly placeholder="No generated image selected" />
+          <button id="pick-image-btn">Image</button>
+        </div>
+        <div class="tool-actions">
+          <button id="capture-image-btn">Capture latest image</button>
+          <button id="import-image-btn">Import image to folder</button>
+        </div>
+        <div class="tool-actions">
+          <button id="capture-questions-btn">Capture latest answer</button>
+          <button id="save-questions-btn">Save questions JSON</button>
+        </div>
+        <textarea id="questions-json" rows="7" placeholder="Captured ChatGPT JSON appears here"></textarea>
+        <p id="import-result" class="muted"></p>
+        <div id="challenge-preview" class="challenge-preview"></div>
+      </section>
+
+      <div id="drag-divider-horizontal" class="drag-divider-horizontal"></div>
+
+      <section class="chat-pane">
+        <div class="chat-header">
+          <div>
+            <p class="eyebrow">Side browser</p>
+            <h2>ChatGPT</h2>
+          </div>
+          <div class="tool-actions">
+            <button id="reload-chat-btn">Reload</button>
+            <button id="reset-chat-btn">Reset</button>
+            <button id="open-chat-chrome-btn">Chrome</button>
+          </div>
+        </div>
+        <div id="chat-status" class="chat-status">Loading ChatGPT...</div>
+        <webview
+          id="chatgpt-view"
+          src="https://chatgpt.com/"
+          partition="persist:photo-memory-chatgpt"
+          allowpopups
+          useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+        ></webview>
+      </section>
+    </aside>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

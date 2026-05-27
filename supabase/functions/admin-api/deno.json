@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "serve": "supabase functions serve admin-api"
+  },
+  "imports": {}
+}

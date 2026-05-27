@@ -1,0 +1,142 @@
+{
+  "challenge_date": "2026-05-26",
+  "image_path": "2026/may/26.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\may\\26.png",
+  "created_at": "2026-05-26T22:54:45.427Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A cozy retro-style corner convenience store on a rainy evening, playful handheld mobile-game aesthetic, warm amber lighting, clean composition with easy-to-remember details. In the center: a small red checkout counter with exactly four colorful snack boxes stacked beside an old beige cash register. Behind the counter hangs a round wall clock showing 7:15. On the left side: a glass refrigerator with three visible drink bottles — one green, one orange, one blue. Near the entrance sits a wet yellow umbrella in a silver stand. On the right side: a short wooden shelf holding exactly five canned goods in two uneven rows. A sleepy orange cat is curled up under the shelf. Near the front window: two small potted plants, one taller than the other. Outside the rain-speckled window, a parked teal bicycle is partially visible. Include a black-and-white checkered floor, soft reflections from the rain, cozy exaggerated shapes, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "How many hanging lamps were above the café counter area?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Three",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Two",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Four",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Five",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the bicycle outside the window?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "Red",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Blue",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What item was standing inside the striped umbrella holder?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "A blue umbrella",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A walking cane",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A broom",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A tennis racket",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "How many muffins were on the plate on the table?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "Two",
+          "is_correct": true
+        },
+        {
+          "answer_text": "One",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Three",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Four",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What pastries were displayed on the lower shelf of the bakery case?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "Pink donuts",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Chocolate cookies",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Blueberry pies",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Cinnamon rolls",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the espresso machine on the counter?",
+      "order_index": 5,
+      "answers": [
+        {
+          "answer_text": "Mint green",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Black",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Silver",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

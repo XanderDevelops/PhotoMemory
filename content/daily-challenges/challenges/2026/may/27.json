@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-05-27",
+  "image_path": "2026/may/27.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\may\\27.png",
+  "created_at": "2026-05-26T23:09:52.481Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A cozy vintage rubberhose-style corner diner during early evening, colorful cartoony 1930s-inspired animation aesthetic, warm amber lighting, playful exaggerated shapes, clean composition, consistent retro palette. In the center: a round turquoise table with exactly two cherry milkshakes topped with whipped cream and striped straws. Beside the milkshakes sits a small plate with three donuts: one pink, one chocolate, one plain glazed. On the left side: a smiling chrome jukebox glowing orange and teal. Near the jukebox is a red swivel stool slightly tilted sideways. Behind the table: a large window showing a purple sunset sky and a tiny crescent moon. Hanging from the ceiling is a yellow pendant lamp casting warm light downward. On the right side counter: exactly four stacked white plates beside a silver coffee pot. A tiny black cat with oversized cartoon eyes sits under the table looking upward. The floor is black-and-white checkerboard tile with one loose tile near the bottom-right corner. Clean framing, easy-to-remember object placement, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "What color was the round table in the diner?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Bright yellow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Turquoise",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Dark red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Cream white",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was glowing on the left side of the scene?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "A ceiling fan",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A jukebox",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A soda machine",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A wall clock",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "How many milkshakes were on the table?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "One",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Three",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Four",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Two",
+          "is_correct": true
+        }
+      ]
+    },
+    {
+      "question_text": "What animal was sitting under the table?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "A small dog",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A black cat",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A gray rabbit",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A white mouse",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What could be seen through the window?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A rainbow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A snowy mountain",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A crescent moon",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A flying airplane",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}
