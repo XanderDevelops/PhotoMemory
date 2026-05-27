@@ -56,7 +56,7 @@
         <button data-tab="leaderboard">Leaderboard</button>
         <button data-admin-only data-tab="users" hidden>All Users</button>
         <button data-admin-only data-tab="mail" hidden>Mail Studio</button>
-        <button data-admin-only data-tab="notifications" hidden>Notifications</button>
+        <button data-admin-only data-tab="notifications" hidden>Push Notifications</button>
         <button data-admin-only data-tab="daily" hidden>Daily Challenges</button>
         <button data-admin-only data-tab="contextual" hidden>Contextual Memory</button>
       </nav>
@@ -143,30 +143,19 @@
               <h2>High Scores</h2>
             </div>
           </div>
-          <div class="comparison-controls">
-            <label>Compare with a player's email
-              <input id="compare-player-email" type="email" placeholder="player@example.com" />
-            </label>
-            <button id="compare-player-btn" class="secondary-button" type="button">Compare</button>
-            <button id="clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+          <div class="highscore-controls">
+            <div class="highscore-control-row">
+              <label>Compare with a player's email
+                <input id="compare-player-email" type="email" placeholder="player@example.com" />
+              </label>
+              <div class="highscore-action-group">
+                <button id="compare-player-btn" class="secondary-button" type="button">Compare</button>
+                <button id="clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+              </div>
+            </div>
           </div>
           <div id="comparison-summary" class="comparison-summary"></div>
-
-          <section class="score-section">
-            <div>
-              <p class="eyebrow">Memory type-based games</p>
-              <h3>Visual memory modes</h3>
-            </div>
-            <div id="memory-highscores-grid" class="highscore-grid"></div>
-          </section>
-
-          <section class="score-section">
-            <div>
-              <p class="eyebrow">Classics</p>
-              <h3>Core memory drills</h3>
-            </div>
-            <div id="classic-highscores-grid" class="highscore-grid"></div>
-          </section>
+          <div id="highscore-groups"></div>
         </div>
       </section>
 
@@ -225,7 +214,7 @@
       </section>
 
       <section id="mail-panel" class="panel">
-        <div class="surface mail-studio">
+        <div class="surface mail-studio mail-expanded">
           <div class="section-heading mail-studio-heading">
             <div>
               <p class="eyebrow">Campaigns</p>
@@ -258,52 +247,129 @@
                   <input id="mail-subject" type="text" value="A note from Photo Memory" />
                 </label>
 
+                <div class="mail-design-grid">
+                  <label>Google font link
+                    <input id="mail-font-link" type="url" placeholder="https://fonts.googleapis.com/css2?family=Inter..." />
+                  </label>
+                  <label>Font family
+                    <input id="mail-font-family" type="text" value="Inter, Arial, sans-serif" />
+                  </label>
+                  <label>Email width
+                    <input id="mail-canvas-width" type="number" min="320" max="900" step="10" value="640" />
+                  </label>
+                  <label>Canvas height
+                    <input id="mail-canvas-height" type="number" min="360" max="1800" step="20" value="720" />
+                  </label>
+                  <label>Page color
+                    <input id="mail-bg-color" type="color" value="#fff8e8" />
+                  </label>
+                  <label>Email color
+                    <input id="mail-card-color" type="color" value="#fffdf6" />
+                  </label>
+                  <label>Dark page color
+                    <input id="mail-dark-bg-color" type="color" value="#11100f" />
+                  </label>
+                  <label>Dark email color
+                    <input id="mail-dark-card-color" type="color" value="#1d1a17" />
+                  </label>
+                  <label>Dark text color
+                    <input id="mail-dark-text-color" type="color" value="#fff8e8" />
+                  </label>
+                </div>
+
                 <div class="editor-header">
                   <div class="editor-toolbar">
-                    <button data-format="bold" title="Bold" type="button">B</button>
-                    <button data-format="italic" title="Italic" type="button">I</button>
-                    <button data-format="insertUnorderedList" title="Bullet list" type="button">List</button>
-                    <button data-format="createLink" title="Link" type="button">Link</button>
+                    <button id="mail-add-text-btn" type="button">Text</button>
+                    <button id="mail-add-image-btn" type="button">Image</button>
+                    <button id="mail-add-button-btn" type="button">Button</button>
+                    <button id="mail-add-spacer-btn" type="button">Spacer</button>
                   </div>
-                  <button id="toggle-editor-mode-btn" class="secondary-button" type="button">HTML</button>
+                  <div class="editor-toolbar">
+                    <button id="mail-expand-canvas-btn" class="secondary-button" type="button">Full view</button>
+                    <button id="toggle-editor-mode-btn" class="secondary-button" type="button">HTML</button>
+                  </div>
                 </div>
 
-                <div id="mail-editor" class="rich-editor mail-rich-editor" contenteditable="true">
-                  <h2>Hello from Photo Memory</h2>
-                  <p>We have something new ready for you.</p>
+                <label id="mail-image-url-row" class="mail-image-url-row">Image URL
+                  <input id="mail-image-url" type="url" placeholder="https://..." />
+                </label>
+                <div class="mail-hosted-image-row">
+                  <label>Host image for email
+                    <input id="mail-hosted-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                  </label>
+                  <button id="mail-upload-hosted-image-btn" class="secondary-button" type="button">Upload image</button>
+                  <span id="mail-hosted-image-status" class="muted">No hosted image selected</span>
                 </div>
-                <textarea id="mail-editor-source" class="rich-editor mail-source-editor" placeholder="HTML source code"></textarea>
+
+                <div class="mail-canvas-preview-grid">
+                  <div class="mail-canvas-column">
+                    <div class="mail-column-heading">
+                      <div>
+                        <p class="eyebrow">Editor</p>
+                        <h3>Canvas</h3>
+                      </div>
+                    </div>
+                    <div id="mail-editor" class="rich-editor mail-rich-editor" aria-label="Email canvas"></div>
+                    <textarea id="mail-editor-source" class="rich-editor mail-source-editor" placeholder="HTML source code"></textarea>
+                  </div>
+
+                  <div class="mail-preview-column">
+                    <div class="mail-column-heading">
+                      <div>
+                        <p class="eyebrow">Preview</p>
+                        <h3>Email view</h3>
+                      </div>
+                      <div class="segmented-toggle" role="group" aria-label="Preview color mode">
+                        <button id="mail-preview-light-btn" class="active" type="button" data-mail-preview-mode="light">Light</button>
+                        <button id="mail-preview-dark-btn" type="button" data-mail-preview-mode="dark">Dark</button>
+                      </div>
+                    </div>
+                    <iframe id="mail-preview-frame" class="mail-preview-frame" title="Email preview"></iframe>
+                  </div>
+                </div>
               </div>
 
-              <div class="mail-panel-card mail-options-card">
+            </section>
+
+            <aside class="mail-side-panel">
+              <section class="mail-panel-card mail-selected-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">Selected block</p>
+                    <h3>Position and style</h3>
+                  </div>
+                </div>
+                <div class="mail-block-grid">
+                  <label>Text
+                    <textarea id="mail-block-text" rows="3" placeholder="Select a text or button block"></textarea>
+                  </label>
+                  <label>Link URL
+                    <input id="mail-block-link" type="url" placeholder="https://..." />
+                  </label>
+                  <label>X<input id="mail-block-x" type="number" step="1" /></label>
+                  <label>Y<input id="mail-block-y" type="number" step="1" /></label>
+                  <label>Width<input id="mail-block-width" type="number" min="20" step="1" /></label>
+                  <label>Height<input id="mail-block-height" type="number" min="12" step="1" /></label>
+                  <label>Font size<input id="mail-block-font-size" type="number" min="8" max="72" step="1" /></label>
+                  <label>Radius<input id="mail-block-radius" type="number" min="0" max="80" step="1" /></label>
+                  <label>Text color<input id="mail-block-color" type="color" /></label>
+                  <label>Fill color<input id="mail-block-bg" type="color" /></label>
+                </div>
+                <div class="mail-action-grid">
+                  <button id="mail-duplicate-block-btn" class="secondary-button" type="button">Duplicate</button>
+                  <button id="mail-delete-block-btn" class="secondary-button" type="button">Delete block</button>
+                </div>
+              </section>
+
+              <section class="mail-panel-card mail-options-card">
                 <div class="mail-file-grid">
-                  <label>Attachments
+                  <label class="file-drop">Attachments
                     <input id="mail-attachments-file" type="file" multiple />
                     <span id="mail-attachments-status" class="muted">No attachments</span>
                   </label>
-                  <label>Inline images
+                  <label class="file-drop">Inline image files
                     <input id="mail-images-file" type="file" accept="image/*" multiple />
-                    <span id="mail-images-status" class="muted">No inline images</span>
-                  </label>
-                </div>
-
-                <div class="toggle-stack">
-                  <label class="toggle-row">
-                    <input id="mail-automate" type="checkbox" />
-                    <span>Automate recurring delivery</span>
-                  </label>
-                  <label class="toggle-row">
-                    <input id="mail-send-push" type="checkbox" />
-                    <span>Send matching in-app notification</span>
-                  </label>
-                </div>
-
-                <div id="mail-push-details" class="mail-push-details">
-                  <label>Push title
-                    <input id="mail-push-title" type="text" placeholder="New memory training available!" />
-                  </label>
-                  <label>Push message
-                    <input id="mail-push-body" type="text" placeholder="Log in now to see what's new." />
+                    <span id="mail-images-status" class="muted">No uploaded images</span>
                   </label>
                 </div>
 
@@ -316,12 +382,11 @@
                       <option value="all">All users</option>
                     </select>
                   </label>
+                  <button id="mail-review-recipients-btn" class="secondary-button" type="button">Review recipients</button>
                   <button id="send-mail-btn">Send campaign</button>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <aside class="mail-side-panel">
               <section class="mail-panel-card">
                 <div class="mail-panel-heading">
                   <div>
@@ -339,44 +404,37 @@
                 </label>
                 <button id="extract-ai-mail-btn" class="secondary-button" type="button">Extract HTML</button>
               </section>
-
-              <section class="mail-panel-card">
-                <div class="mail-panel-heading">
-                  <div>
-                    <p class="eyebrow">Delivery studio</p>
-                    <h3>Unverified reminders</h3>
-                  </div>
-                </div>
-                <p class="muted">Preview or send the same Edge Function template used by the built-in preset.</p>
-                <div class="mail-action-grid">
-                  <button id="preview-unverified-email-btn" class="secondary-button" type="button">Preview</button>
-                  <button id="send-unverified-email-btn" class="secondary-button" type="button">Send reminders</button>
-                </div>
-              </section>
             </aside>
           </div>
         </div>
       </section>
 
       <section id="notifications-panel" class="panel">
-        <div class="surface editor-layout">
-          <div>
-            <p class="eyebrow">In-app notifications</p>
-            <h2>Create notification</h2>
-            <p class="muted">This writes notification records now, so the game can render them when you integrate the inbox.</p>
+        <div class="surface push-studio">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Push notifications</p>
+              <h2>Push Notifications Studio</h2>
+              <p class="muted">Schedule dashboard push messages separately from email campaigns.</p>
+            </div>
           </div>
-          <label>Title<input id="notification-title" type="text" placeholder="New challenge ready" /></label>
-          <label>Message<textarea id="notification-body" rows="4" placeholder="Tell players what changed..."></textarea></label>
-          <label>Optional link<input id="notification-link" type="url" placeholder="https://..." /></label>
-          <div class="send-grid">
+          <div class="push-form-grid">
+            <label>Title<input id="notification-title" type="text" placeholder="New challenge ready" /></label>
+            <label>Send date and hour<input id="notification-scheduled-at" type="datetime-local" /></label>
+            <label class="full-span">Message<textarea id="notification-body" rows="5" placeholder="Tell players what changed..."></textarea></label>
+            <label class="full-span">Optional link<input id="notification-link" type="url" placeholder="https://..." /></label>
+          </div>
+          <div class="send-grid push-send-grid">
             <label>Audience
               <select id="notification-audience">
                 <option value="selected">Selected users</option>
                 <option value="filtered">Current filtered users</option>
+                <option value="unverified">Unverified users</option>
                 <option value="all">All users</option>
               </select>
             </label>
-            <button id="create-notification-btn">Queue notification</button>
+            <button id="notification-review-recipients-btn" class="secondary-button" type="button">Review recipients</button>
+            <button id="create-notification-btn">Schedule push</button>
           </div>
         </div>
       </section>
@@ -408,11 +466,23 @@
             </article>
           </div>
 
-          <div class="leaderboard-tools">
-            <label>Compare leaderboard with a player's email
-              <input id="leaderboard-compare-email" type="email" placeholder="player@example.com" />
-            </label>
-            <button id="leaderboard-compare-btn" class="secondary-button" type="button">Compare</button>
+          <div class="leaderboard-controls">
+            <div class="leaderboard-control-row">
+              <label>Compare leaderboard with a player's email
+                <input id="leaderboard-compare-email" type="email" placeholder="player@example.com" />
+              </label>
+              <div class="leaderboard-action-group">
+                <button id="leaderboard-compare-btn" class="secondary-button" type="button">Compare</button>
+                <button id="leaderboard-clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+              </div>
+            </div>
+
+            <div class="leaderboard-control-row">
+              <label>Search players
+                <input id="leaderboard-search" type="search" placeholder="Search by name" />
+              </label>
+              <button id="leaderboard-find-me-btn" class="find-me-button" type="button">Find me</button>
+            </div>
           </div>
           <div id="leaderboard-comparison" class="comparison-summary dark"></div>
 
@@ -420,14 +490,20 @@
             <table class="leaderboard-table">
               <thead>
                 <tr>
-                  <th>Rank</th>
-                  <th>Name</th>
-                  <th>Tests</th>
-                  <th>Score</th>
+                  <th aria-sort="ascending"><button class="leaderboard-sort-button active" data-leaderboard-sort="rank" data-direction="up" type="button">Rank</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="name" type="button">Name</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="testCount" type="button">Tests</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="score" type="button">Score</button></th>
                 </tr>
               </thead>
               <tbody id="leaderboard-list"></tbody>
             </table>
+          </div>
+
+          <div class="leaderboard-pagination">
+            <button id="leaderboard-prev-btn" class="secondary-button" type="button">Previous</button>
+            <span id="leaderboard-pagination-info">Showing 0 players</span>
+            <button id="leaderboard-next-btn" class="secondary-button" type="button">Next</button>
           </div>
         </div>
       </section>
@@ -511,13 +587,31 @@
     </form>
   </dialog>
 
-  <dialog id="preview-email-dialog">
-    <form method="dialog" class="modal-card preview-modal">
-      <h2>Unverified Email Preview</h2>
-      <p class="muted">Rendered by the admin Edge Function using the same template that sends the reminder.</p>
-      <iframe id="preview-email-frame" title="Unverified email preview"></iframe>
+  <dialog id="recipient-dialog">
+    <form method="dialog" class="modal-card recipient-modal">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow" id="recipient-dialog-eyebrow">Audience</p>
+          <h2 id="recipient-dialog-title">Review recipients</h2>
+        </div>
+        <span id="recipient-dialog-count" class="preset-count">0</span>
+      </div>
+      <p id="recipient-dialog-summary" class="muted"></p>
+      <div class="recipient-tools">
+        <label>Search
+          <input id="recipient-search" type="search" placeholder="Find a name or email" />
+        </label>
+        <label>Add by email
+          <span class="recipient-add-row">
+            <input id="recipient-manual-email" type="email" placeholder="player@example.com" />
+            <button id="recipient-add-email-btn" class="secondary-button" type="button">Add</button>
+          </span>
+        </label>
+      </div>
+      <div id="recipient-list" class="recipient-list"></div>
       <div class="modal-actions">
         <button value="cancel" class="secondary-button">Close</button>
+        <button id="recipient-apply-btn" type="button">Apply selection</button>
       </div>
     </form>
   </dialog>

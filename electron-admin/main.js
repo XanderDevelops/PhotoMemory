@@ -1,5 +1,5 @@
 const { app, BrowserWindow, dialog, ipcMain, clipboard, session, shell } = require('electron');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -7,6 +7,7 @@ const { pathToFileURL } = require('node:url');
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
 const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36';
+const CHATGPT_LOGIN_URL = 'https://chatgpt.com/';
 let mainWindow = null;
 let pendingDownload = null;
 
@@ -24,14 +25,39 @@ function dashboardUrl() {
 
 function findChromePath() {
   const candidates = [
+    process.env.CHROME_PATH,
     path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    readChromePathFromRegistry('HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe'),
+    readChromePathFromRegistry('HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe'),
+    findChromePathFromWhere(),
   ];
   return candidates.find((candidate) => candidate && fs.existsSync(candidate));
 }
 
-async function openInChrome(url = 'https://chatgpt.com/') {
+function readChromePathFromRegistry(registryPath) {
+  if (process.platform !== 'win32') return null;
+  const result = spawnSync('reg', ['query', registryPath, '/ve'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  if (result.status !== 0) return null;
+  const match = result.stdout.match(/REG_SZ\s+(.+?chrome\.exe)/i);
+  return match ? match[1].trim() : null;
+}
+
+function findChromePathFromWhere() {
+  if (process.platform !== 'win32') return null;
+  const result = spawnSync('where', ['chrome'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  if (result.status !== 0) return null;
+  return result.stdout.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || null;
+}
+
+async function openInChrome(url = CHATGPT_LOGIN_URL) {
   const chromePath = findChromePath();
 
   if (chromePath) {
@@ -531,7 +557,7 @@ ipcMain.handle('chat:reset-session', async () => {
   return { ok: true };
 });
 
-ipcMain.handle('chat:open-chrome', (_event, url) => openInChrome(url || 'https://chatgpt.com/'));
+ipcMain.handle('chat:open-chrome', (_event, url) => openInChrome(url || CHATGPT_LOGIN_URL));
 
 app.whenReady().then(createWindow);
 

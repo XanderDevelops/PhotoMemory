@@ -21,4 +21,4 @@ npm start
 
 The generator uses the ChatGPT webview, not an API. The app sends prompts into the browser, tries to capture the latest generated image/question answer, and also watches downloads so generated images can be saved into the correct date folder.
 
-For ChatGPT login, sign in inside the ChatGPT pane. Google OAuth often blocks embedded browsers; opening Google in Chrome creates a separate browser session and cannot log that pane in. Use ChatGPT email login in the pane when Google rejects Electron.
+For ChatGPT login, sign in inside the ChatGPT pane. The pane uses a persistent Chromium session, like the working multi-session Electron app. Opening a half-finished Google OAuth URL in Chrome can split the flow and cause `client_id_not_found_in_session`; the Chrome button is only a separate browser fallback.

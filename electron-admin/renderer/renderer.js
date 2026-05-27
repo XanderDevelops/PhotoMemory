@@ -16,6 +16,7 @@ const questionsJsonInput = document.getElementById('questions-json');
 const importResult = document.getElementById('import-result');
 const challengePreview = document.getElementById('challenge-preview');
 const chatStatus = document.getElementById('chat-status');
+const CHATGPT_LOGIN_URL = 'https://chatgpt.com/';
 
 let scanState = null;
 let activePromptPack = null;
@@ -31,7 +32,7 @@ function setStatus(message) {
 }
 
 function isGoogleAuthUrl(url = '') {
-  return /accounts\.google\.com|signin\/oauth\/consent|GeneralOAuthFlow|client_id_not_found_in_session/i.test(url);
+  return /accounts\.google\.com|\/signin\/oauth\/|GeneralOAuthFlow|client_id_not_found_in_session|unsupportedbrowser|oauth2\/v2\/auth/i.test(url);
 }
 
 function showGoogleLoginNotice(url = '') {
@@ -40,11 +41,11 @@ function showGoogleLoginNotice(url = '') {
   lastGoogleNoticeAt = now;
 
   if (/client_id_not_found_in_session/i.test(url)) {
-    chatStatus.textContent = 'That Google login was split between Chrome and Electron. Click Reset, then log in inside this pane with ChatGPT email login.';
+    chatStatus.textContent = 'That Google login flow lost its original session. Click Reset, then start Google login again inside this ChatGPT pane.';
     return;
   }
 
-  chatStatus.textContent = 'Google login must stay inside this ChatGPT pane. If Google says this browser is unsupported, use ChatGPT email login here instead.';
+  chatStatus.textContent = 'Continue Google login in this ChatGPT pane. Keep the login flow in one browser session.';
 }
 
 function selectedDate() {
@@ -582,18 +583,18 @@ function stopQueue(message = 'Auto queue stopped.') {
 document.getElementById('reload-dashboard-btn').addEventListener('click', () => dashboardView.reload());
 document.getElementById('reload-chat-btn').addEventListener('click', () => {
   chatStatus.textContent = 'Reloading ChatGPT...';
-  chatgptView.loadURL('https://chatgpt.com/');
+  chatgptView.loadURL(CHATGPT_LOGIN_URL);
 });
 document.getElementById('reset-chat-btn').addEventListener('click', async () => {
   chatStatus.textContent = 'Resetting ChatGPT session...';
   await window.photoMemoryAdmin.resetChatSession();
-  chatgptView.loadURL('https://chatgpt.com/');
+  chatgptView.loadURL(CHATGPT_LOGIN_URL);
 });
 document.getElementById('open-chat-chrome-btn').addEventListener('click', async () => {
-  const result = await window.photoMemoryAdmin.openChatInChrome('https://chatgpt.com/');
+  const result = await window.photoMemoryAdmin.openChatInChrome(CHATGPT_LOGIN_URL);
   chatStatus.textContent = result.browser === 'chrome'
-    ? 'Opened ChatGPT in Google Chrome as a separate fallback. It cannot log in this Electron pane.'
-    : 'Opened ChatGPT in your default browser as a separate fallback. It cannot log in this Electron pane.';
+    ? 'Opened ChatGPT in Google Chrome as a separate browser fallback. To sign in this pane, keep the login inside the pane.'
+    : 'Chrome was not found, so ChatGPT opened in your default browser as a separate browser fallback.';
 });
 document.getElementById('toggle-chat-btn').addEventListener('click', () => assistantPane.classList.toggle('collapsed'));
 
@@ -741,6 +742,10 @@ chatgptView.addEventListener('dom-ready', () => {
 });
 
 chatgptView.addEventListener('did-fail-load', (event) => {
+  const failedUrl = event.validatedURL || event.url || '';
+  if (event.errorCode === -3 || isGoogleAuthUrl(failedUrl)) {
+    return;
+  }
   if (event.isMainFrame) {
     chatReady = false;
     chatStatus.textContent = `ChatGPT failed to load: ${event.errorDescription || event.errorCode}`;
