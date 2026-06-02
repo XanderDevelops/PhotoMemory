@@ -1,0 +1,19 @@
+{
+  "redirects": [
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard/",
+      "permanent": false
+    },
+    {
+      "source": "/PhotoMemoryDashboard",
+      "destination": "/dashboard/",
+      "permanent": false
+    },
+    {
+      "source": "/PhotoMemoryDashboard/index.html",
+      "destination": "/dashboard/",
+      "permanent": false
+    }
+  ]
+}
