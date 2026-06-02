@@ -1,32 +1,32 @@
 {
   "challenge_date": "2026-06-11",
-  "theme": "Famous Landmarks by Height",
-  "order_description": "Small clue: some of these stand much higher above the ground than others.",
+  "theme": "World Cities by Population",
+  "order_description": "Small clue: some places quietly hold more people than others.",
   "items": [
     {
-      "name": "Christ the Redeemer",
+      "name": "Sydney",
       "correct_index": 0
     },
     {
-      "name": "Statue of Liberty",
+      "name": "London",
       "correct_index": 1
     },
     {
-      "name": "Big Ben",
+      "name": "Mexico City",
       "correct_index": 2
     },
     {
-      "name": "Space Needle",
+      "name": "Tokyo",
       "correct_index": 3
     },
     {
-      "name": "Eiffel Tower",
+      "name": "Shanghai",
       "correct_index": 4
     }
   ],
-  "prompt": "Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Christ the Redeemer, Statue of Liberty, Big Ben, Space Needle, Eiffel Tower. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony landmark icon representing the landmark. Match the attached coffee mug icon style: flat cartoony illustration, clean dark outline, subtle flat shading, warm highlight, consistent scale and camera angle, polished casual game asset, no text, no numbers, no arrows, no labels, no UI, no logos.",
+  "prompt": "Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Sydney, London, Mexico City, Tokyo, Shanghai. Hide the order through visual population density cues: Sydney shows 1 simplified skyline cluster, London shows 2 skyline clusters, Mexico City shows 3 skyline clusters, Tokyo shows 4 skyline clusters, and Shanghai shows 5 skyline clusters. Each city is represented by a distinctive cartoony skyline silhouette with a few recognizable landmark-inspired shapes, but no text, flags, numbers, or labels. Each card has transparent background outside the rounded tile, a simple flat colored tile inside, and a centered subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, polished casual game asset, no arrows, no UI, no logos.",
   "image_path": "2026/jun/11.png",
   "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\line-it-up-daily-challenges\\images\\2026\\jun\\11.png",
-  "created_at": "2026-06-02T22:16:30.915Z",
+  "created_at": "2026-06-02T22:50:08.536Z",
   "source": "chatgpt-webview"
 }

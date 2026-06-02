@@ -609,7 +609,7 @@ function buildLineItUpPromptPack(dateValue) {
     '- It can still use history, people, countries, sports, or facts, but avoid the plain "what happened first" version unless the ordering clue is disguised in a more playful way.',
     '- The puzzle should feel surprising but reasonable. After the answer is revealed, the reaction should be "ohh, that makes sense", not "are you serious?"',
     '- The five images should look like a set, but they should not directly reveal the order by showing arrows, numbers, stages, progress, or labels. Subtle countable details or color shifts are allowed when they are the hidden clue.',
-    '- The player-facing order_description must be a subtle clue, not the answer. Example: "Small clue: look for what quietly changes across the set."',
+    '- The player-facing order_description must be neutral and must not include a clue. Use a short phrase like "Find the hidden order."',
     '- Avoid expert-only trivia. A curious player should be able to reason it out or make a good guess.',
     '- Keep each item name short enough for a game card and do not put the ordering value in the item name.',
     '- Make the puzzle playful, visual, and satisfying.',
@@ -623,7 +623,7 @@ function buildLineItUpPromptPack(dateValue) {
     'Return ONLY valid JSON wrapped EXACTLY like this:',
     '',
     '<TO COPY>',
-    '{"theme":"Market Treats by Hidden Count","order_description":"Small clue: count what quietly repeats.","items":["Lemon Tart","Berry Pie","Apple Basket","Orange Stand","Grape Bowl"],"image_prompt":"Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos."}',
+    '{"theme":"Market Treats by Hidden Count","order_description":"Find the hidden order.","items":["Lemon Tart","Berry Pie","Apple Basket","Orange Stand","Grape Bowl"],"image_prompt":"Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos."}',
     '</TO COPY>',
     '',
     'Do not generate the image yet.'

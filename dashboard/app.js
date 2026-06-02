@@ -3253,7 +3253,7 @@ async function saveLineItUpDailyChallenge(event) {
 function suggestLiuPrompt() {
   const suggestion = {
     theme: 'Market Treats by Hidden Count',
-    desc: 'Small clue: count what quietly repeats.',
+    desc: 'Find the hidden order.',
     items: ['Lemon Tart', 'Berry Pie', 'Apple Basket', 'Orange Stand', 'Grape Bowl'],
     prompt: 'Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos.'
   };

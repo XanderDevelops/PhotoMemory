@@ -1880,13 +1880,24 @@ class LineItUpGame {
         document.getElementById('opponent-history-wrapper').style.display = 'none';
         document.getElementById('multiplayer-vs-pill').style.display = 'none';
 
-        // Map database challenge items into game engine layout items
-        const secret = challenge.items.map(item => ({
-            name: item.name,
-            correct_index: item.correct_index,
-            icon: item.image_path,
-            imageUrl: this.supabase.storage.from('daily-challenge').getPublicUrl(item.image_path).data.publicUrl
-        }));
+        // Map database challenge items into game engine layout items.
+        // Older or incomplete admin saves can have a null image_path; Supabase's
+        // getPublicUrl expects a string, so guard before calling it.
+        const secret = (challenge.items || []).map(item => {
+            const name = item?.name || 'Mystery Card';
+            const imagePath = typeof item?.image_path === 'string' ? item.image_path.trim() : '';
+            const fallbackImageUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}`;
+            const imageUrl = item?.image_url || (imagePath
+                ? this.supabase.storage.from('daily-challenge').getPublicUrl(imagePath).data.publicUrl
+                : fallbackImageUrl);
+
+            return {
+                name,
+                correct_index: Number(item?.correct_index ?? 0),
+                icon: imagePath,
+                imageUrl
+            };
+        });
 
         this.gameState.secretSequence = [...secret];
 
