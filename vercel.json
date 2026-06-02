@@ -15,5 +15,27 @@
       "destination": "/dashboard/",
       "permanent": false
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/style.css",
+      "destination": "/line-it-up-web/style.css"
+    },
+    {
+      "source": "/platform.js",
+      "destination": "/line-it-up-web/platform.js"
+    },
+    {
+      "source": "/game.js",
+      "destination": "/line-it-up-web/game.js"
+    },
+    {
+      "source": "/assets/icons/:path*",
+      "destination": "/line-it-up-web/assets/icons/:path*"
+    },
+    {
+      "source": "/assets/audio/:path*",
+      "destination": "/line-it-up-web/assets/audio/:path*"
+    }
   ]
 }
