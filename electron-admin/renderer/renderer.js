@@ -16,10 +16,13 @@ const questionsJsonInput = document.getElementById('questions-json');
 const importResult = document.getElementById('import-result');
 const challengePreview = document.getElementById('challenge-preview');
 const chatStatus = document.getElementById('chat-status');
+const dailyModeBtn = document.getElementById('daily-mode-btn');
+const liuModeBtn = document.getElementById('liu-mode-btn');
 const CHATGPT_LOGIN_URL = 'https://chatgpt.com/';
 
 let scanState = null;
 let activePromptPack = null;
+let generatorMode = 'daily';
 let queueTimer = null;
 let queueItems = [];
 let queueRunning = false;
@@ -106,12 +109,33 @@ async function runChatGPTScript(script, label) {
 
 async function buildPromptPack(date = selectedDate()) {
   if (!date) return null;
-  activePromptPack = await window.photoMemoryAdmin.buildPromptPack({ date });
+  activePromptPack = await window.photoMemoryAdmin.buildPromptPack({ date, mode: generatorMode });
   promptPreview.value = activePromptPack.fullPrompt;
   if (!scenePromptInput.value.trim()) {
     scenePromptInput.placeholder = activePromptPack.scenePrompt;
   }
   return activePromptPack;
+}
+
+async function setGeneratorMode(mode) {
+  generatorMode = mode === 'line-it-up' ? 'line-it-up' : 'daily';
+  dailyModeBtn.classList.toggle('active', generatorMode === 'daily');
+  liuModeBtn.classList.toggle('active', generatorMode === 'line-it-up');
+  scenePromptInput.value = '';
+  questionsJsonInput.value = '';
+  sourceImageInput.value = '';
+
+  const rootPath = await window.photoMemoryAdmin.defaultDailyRoot(generatorMode);
+  imagesRootInput.value = rootPath;
+  await scanFolder(rootPath);
+
+  if (generatorMode === 'line-it-up') {
+    scanSummary.textContent = `${scanSummary.textContent} Line It Up mode uses its own folder: content/line-it-up-daily-challenges.`;
+    scenePromptInput.placeholder = 'Line It Up ordered idea JSON appears here';
+    questionsJsonInput.placeholder = 'Line It Up plan JSON appears here';
+  }
+
+  buildPromptPack().catch((error) => setStatus(error.message || String(error)));
 }
 
 function renderScan(scan) {
@@ -154,7 +178,7 @@ function renderChallenge(challenge) {
 }
 
 async function scanFolder(rootPath) {
-  const scan = await window.photoMemoryAdmin.scanDailyFolder(rootPath || imagesRootInput.value);
+  const scan = await window.photoMemoryAdmin.scanDailyFolder(rootPath || imagesRootInput.value, generatorMode);
   renderScan(scan);
   return scan;
 }
@@ -165,6 +189,7 @@ async function loadChallengeForSelectedDate() {
   const challenge = await window.photoMemoryAdmin.loadChallenge({
     rootPath: imagesRootInput.value,
     date,
+    mode: generatorMode,
   });
   renderChallenge(challenge);
   promptPreview.value = challenge.promptPack.fullPrompt;
@@ -306,6 +331,81 @@ async function captureLatestAssistantText() {
   return text;
 }
 
+function parseJsonFromChatText(text) {
+  const cleaned = String(text || '').trim();
+  const copyMatch = cleaned.match(/<TO[- ]COPY>([\s\S]*?)<\/TO[- ]COPY>/i);
+  const candidates = [];
+
+  if (copyMatch) {
+    candidates.push(copyMatch[1].replace(/```(?:json)?/gi, '').replace(/```/g, '').trim());
+  }
+
+  const codeMatch = cleaned.replace(/```(?:json)?/gi, '```').match(/```([\s\S]*?)```/);
+  if (codeMatch) candidates.push(codeMatch[1].trim());
+
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end > start) candidates.push(cleaned.slice(start, end + 1));
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch (_error) {
+      // Try the next candidate.
+    }
+  }
+
+  throw new Error('Could not find valid Line It Up JSON in the ChatGPT answer.');
+}
+
+function normalizeLineItUpPlan(text) {
+  const plan = parseJsonFromChatText(text);
+  const items = Array.isArray(plan.items) ? plan.items.map((item) => String(item || '').trim()).filter(Boolean) : [];
+  if (!plan.theme || !plan.order_description || !plan.image_prompt || items.length !== 5) {
+    throw new Error('Line It Up JSON must include theme, order_description, image_prompt, and exactly five items.');
+  }
+
+  return {
+    theme: String(plan.theme).trim(),
+    order_description: String(plan.order_description).trim(),
+    image_prompt: String(plan.image_prompt).trim(),
+    items,
+  };
+}
+
+async function sliceLineItUpStrip(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const sliceWidth = Math.floor(image.naturalWidth / 5);
+        const sliceSize = Math.min(sliceWidth, image.naturalHeight);
+        const canvas = document.createElement('canvas');
+        canvas.width = sliceSize;
+        canvas.height = sliceSize;
+        const context = canvas.getContext('2d');
+        const slices = [];
+
+        for (let index = 0; index < 5; index += 1) {
+          context.clearRect(0, 0, sliceSize, sliceSize);
+          context.drawImage(image, index * sliceWidth, 0, sliceSize, sliceSize, 0, 0, sliceSize, sliceSize);
+          slices.push({
+            name: `line-it-up-slice-${index + 1}.png`,
+            type: 'image/png',
+            dataUrl: canvas.toDataURL('image/png'),
+          });
+        }
+
+        resolve(slices);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = () => reject(new Error('Could not load the captured Line It Up image.'));
+    image.src = dataUrl;
+  });
+}
+
 async function waitForStableAssistantText(previousText, label, timeoutMs = 240000) {
   const start = Date.now();
   let lastText = '';
@@ -364,7 +464,7 @@ async function getLatestChatGPTImageInfo() {
   return runChatGPTScript(script, 'Read latest ChatGPT image').catch(() => null);
 }
 
-async function waitForNewChatGPTImage(previousImage, timeoutMs = 360000) {
+async function waitForNewChatGPTImage(previousImage, timeoutMs = 360000, options = {}) {
   const previousSource = previousImage?.source || '';
   const previousCount = previousImage?.count || 0;
   const start = Date.now();
@@ -377,7 +477,7 @@ async function waitForNewChatGPTImage(previousImage, timeoutMs = 360000) {
     const image = await getLatestChatGPTImageInfo();
     if (image?.source && (image.source !== previousSource || image.count > previousCount)) {
       await wait(3500);
-      return captureLatestChatGPTImage();
+      return captureLatestChatGPTImage({ saveDaily: options.saveDaily !== false });
     }
 
     setStatus(`Waiting for ChatGPT image... ${formatDuration(timeoutMs - (Date.now() - start))}`);
@@ -389,6 +489,14 @@ async function waitForNewChatGPTImage(previousImage, timeoutMs = 360000) {
 
 async function captureScenePrompt() {
   const text = await captureLatestAssistantText();
+  if (generatorMode === 'line-it-up') {
+    const plan = normalizeLineItUpPlan(text);
+    questionsJsonInput.value = text;
+    scenePromptInput.value = plan.image_prompt;
+    setStatus('Line It Up ordered idea captured from ChatGPT.');
+    return text;
+  }
+
   scenePromptInput.value = text;
   setStatus('Scene/image prompt captured from ChatGPT.');
   return text;
@@ -400,7 +508,7 @@ async function captureLatestChatGPTAnswer() {
   return text;
 }
 
-async function captureLatestChatGPTImage() {
+async function captureLatestChatGPTImageData() {
   const script = `
     (async () => {
       try {
@@ -449,6 +557,16 @@ async function captureLatestChatGPTImage() {
   `;
   const image = await runChatGPTScript(script, 'Capture ChatGPT image');
   lastCapturedImageDataUrl = image.dataUrl;
+  return image;
+}
+
+async function captureLatestChatGPTImage(options = {}) {
+  const image = await captureLatestChatGPTImageData();
+  if (options.saveDaily === false) {
+    setStatus(`Captured ${image.width}x${image.height} Line It Up image.`);
+    return { image };
+  }
+
   const result = await window.photoMemoryAdmin.saveImageData({
     rootPath: imagesRootInput.value,
     date: selectedDate(),
@@ -464,12 +582,37 @@ async function sendScenePrompt() {
   const date = selectedDate();
   const pack = await buildPromptPack(date);
   await sendPromptToChatGPT(pack.scenePrompt);
-  setStatus(`Scene prompt request sent for ${date}.`);
+  setStatus(generatorMode === 'line-it-up'
+    ? `Line It Up ordered idea prompt sent for ${date}.`
+    : `Scene prompt request sent for ${date}.`);
 }
 
 async function sendImagePrompt() {
   const date = selectedDate();
   const pack = await buildPromptPack(date);
+
+  if (generatorMode === 'line-it-up') {
+    const plan = normalizeLineItUpPlan(questionsJsonInput.value.trim() || scenePromptInput.value.trim());
+    await sendPromptToChatGPT([
+      `Generate the Line It Up daily challenge image for ${date}.`,
+      '',
+      'Create ONE single 1x5 horizontal strip with five square rounded-corner icon cards in the exact order below.',
+      'Each panel must be a square card crop with transparent background outside the rounded tile, a simple flat colored tile inside, and a centered subject.',
+      'The rounded square tile/card must have NO outline, NO border, and NO stroke around its edge. The centered subject may have a clean dark outline.',
+      'Use the attached coffee mug reference as the style target: flat cartoony illustration, rounded-corner colored box/card, clean dark outline, subtle flat shading, warm highlight, polished casual game asset.',
+      'All five icons must share the same scale, style, lighting, line weight, and camera angle.',
+      'Keep the sorting rule hidden and inferable. Subtle countable details, color shifts, shape complexity, or name-based clues are allowed, but no arrows, no numbers, no labels, no progress stages, no text, no logos, no UI, no realistic scenes.',
+      '',
+      plan.image_prompt,
+      '',
+      `Correct order: ${plan.items.join(' -> ')}`,
+      '',
+      'Generate the image only.'
+    ].join('\n'));
+    setStatus(`Line It Up image prompt sent for ${date}.`);
+    return;
+  }
+
   const scenePrompt = scenePromptInput.value.trim();
   if (!scenePrompt) {
     throw new Error('Capture or paste ChatGPT scene prompt first.');
@@ -490,6 +633,11 @@ async function sendImagePrompt() {
 async function sendQuestionsPrompt() {
   const date = selectedDate();
   const pack = await buildPromptPack(date);
+  if (generatorMode === 'line-it-up') {
+    await sendPromptToChatGPT(pack.scenePrompt);
+    setStatus(`Line It Up ordered idea prompt sent for ${date}.`);
+    return;
+  }
   await sendPromptToChatGPT(pack.questionsPrompt);
   setStatus(`Questions prompt sent for ${date}.`);
 }
@@ -536,6 +684,34 @@ async function createFullChallenge(date) {
   await uploadChallengeToSupabase(date, challenge);
 }
 
+async function createFullLineItUpChallenge(date) {
+  challengeDateInput.value = date;
+  scenePromptInput.value = '';
+  questionsJsonInput.value = '';
+
+  setStatus(`Starting Line It Up ChatGPT challenge for ${date}...`);
+  const pack = await buildPromptPack(date);
+
+  const beforeIdea = await getLatestAssistantText().catch(() => '');
+  await sendPromptToChatGPT(pack.scenePrompt);
+  const ideaText = await waitForStableAssistantText(beforeIdea, 'Line It Up ordered idea', 180000);
+  const plan = normalizeLineItUpPlan(ideaText);
+  questionsJsonInput.value = ideaText;
+  scenePromptInput.value = plan.image_prompt;
+
+  const beforeImage = await getLatestChatGPTImageInfo();
+  await sendImagePrompt();
+  const captured = await waitForNewChatGPTImage(beforeImage, 420000, { saveDaily: false });
+  const imageDataUrl = captured?.image?.dataUrl || lastCapturedImageDataUrl;
+  if (!imageDataUrl) throw new Error('Could not capture the generated Line It Up image.');
+
+  setStatus(`Line It Up image captured for ${date}. Slicing and uploading...`);
+  await uploadLineItUpChallengeToSupabase(date, plan, imageDataUrl);
+  await refreshDashboardLineItUp();
+  renderLineItUpPreview(date, plan, imageDataUrl);
+  setStatus(`Line It Up challenge synced to Supabase for ${date}.`);
+}
+
 async function waitBetweenChallenges() {
   const total = delayMs();
   const start = Date.now();
@@ -560,7 +736,11 @@ async function runQueue() {
 
     const currentDate = queueItems.shift();
     try {
-      await createFullChallenge(currentDate);
+      if (generatorMode === 'line-it-up') {
+        await createFullLineItUpChallenge(currentDate);
+      } else {
+        await createFullChallenge(currentDate);
+      }
     } catch (error) {
       stopQueue(error.message || String(error));
       return;
@@ -597,9 +777,11 @@ document.getElementById('open-chat-chrome-btn').addEventListener('click', async 
     : 'Chrome was not found, so ChatGPT opened in your default browser as a separate browser fallback.';
 });
 document.getElementById('toggle-chat-btn').addEventListener('click', () => assistantPane.classList.toggle('collapsed'));
+dailyModeBtn.addEventListener('click', () => setGeneratorMode('daily').catch((error) => setStatus(error.message || String(error))));
+liuModeBtn.addEventListener('click', () => setGeneratorMode('line-it-up').catch((error) => setStatus(error.message || String(error))));
 
 document.getElementById('pick-root-btn').addEventListener('click', async () => {
-  const scan = await window.photoMemoryAdmin.pickDailyRoot();
+  const scan = await window.photoMemoryAdmin.pickDailyRoot(generatorMode);
   if (scan) renderScan(scan);
 });
 
@@ -669,7 +851,7 @@ document.getElementById('import-image-btn').addEventListener('click', async () =
 });
 
 document.getElementById('capture-image-btn').addEventListener('click', () => {
-  captureLatestChatGPTImage().catch((error) => setStatus(error.message || String(error)));
+  captureLatestChatGPTImage({ saveDaily: generatorMode !== 'line-it-up' }).catch((error) => setStatus(error.message || String(error)));
 });
 
 document.getElementById('capture-questions-btn').addEventListener('click', async () => {
@@ -683,6 +865,17 @@ document.getElementById('capture-questions-btn').addEventListener('click', async
 
 document.getElementById('save-questions-btn').addEventListener('click', async () => {
   try {
+    if (generatorMode === 'line-it-up') {
+      const plan = normalizeLineItUpPlan(questionsJsonInput.value || scenePromptInput.value);
+      const imageDataUrl = lastCapturedImageDataUrl;
+      if (!imageDataUrl) throw new Error('Capture the Line It Up image before saving.');
+      await uploadLineItUpChallengeToSupabase(selectedDate(), plan, imageDataUrl);
+      await refreshDashboardLineItUp();
+      renderLineItUpPreview(selectedDate(), plan, imageDataUrl);
+      setStatus(`Line It Up challenge synced to Supabase for ${selectedDate()}.`);
+      return;
+    }
+
     const challenge = await window.photoMemoryAdmin.saveQuestions({
       rootPath: imagesRootInput.value,
       date: selectedDate(),
@@ -711,7 +904,7 @@ window.photoMemoryAdmin.dashboardUrl().then((url) => {
   dashboardView.src = url;
 });
 
-window.photoMemoryAdmin.defaultDailyRoot().then((rootPath) => {
+window.photoMemoryAdmin.defaultDailyRoot(generatorMode).then((rootPath) => {
   imagesRootInput.value = rootPath;
   scanFolder(rootPath);
 });
@@ -843,6 +1036,82 @@ async function uploadChallengeToSupabase(date, challengeResult) {
     setStatus(`Supabase Sync Warning: ${error.message}. Local files saved successfully.`);
     console.error('Supabase upload failed:', error);
   }
+}
+
+async function refreshDashboardLineItUp() {
+  await dashboardView.executeJavaScript(`
+    (async () => {
+      if (typeof loadAdminDashboard === 'function') {
+        await loadAdminDashboard();
+      }
+      return true;
+    })();
+  `).catch(() => null);
+}
+
+function renderLineItUpPreview(date, plan, imageDataUrl) {
+  challengePreview.innerHTML = [
+    `<strong>${date} - Line It Up</strong>`,
+    `<img src="${imageDataUrl}" alt="Line It Up daily challenge ${date}" />`,
+    `<small>Theme: ${plan.theme}</small>`,
+    `<small>${plan.order_description}</small>`,
+    `<ol>${plan.items.map((item) => `<li>${item}</li>`).join('')}</ol>`,
+  ].join('');
+}
+
+async function uploadLineItUpChallengeToSupabase(date, plan, imageDataUrl) {
+  const localResult = await window.photoMemoryAdmin.saveLineItUpChallengeData({
+    rootPath: imagesRootInput.value,
+    date,
+    plan,
+    dataUrl: imageDataUrl,
+  });
+  renderScan(localResult.scan);
+
+  const slices = await sliceLineItUpStrip(imageDataUrl);
+  const challengeData = {
+    id: null,
+    challenge_date: date,
+    theme: plan.theme,
+    order_description: plan.order_description,
+    prompt: plan.image_prompt,
+    originalImageFile: {
+      name: `${date}-line-it-up-strip.png`,
+      type: 'image/png',
+      dataUrl: imageDataUrl,
+    },
+    items: plan.items.map((name, index) => ({
+      name,
+      correct_index: index,
+      imageFile: slices[index],
+    })),
+  };
+
+  const uploadResult = await dashboardView.executeJavaScript(`
+    (async () => {
+      try {
+        if (typeof api !== 'function') {
+          throw new Error('Dashboard API function not found. Make sure you are logged in to the dashboard.');
+        }
+        const res = await api('saveLineItUpChallenge', {
+          challenge: ${JSON.stringify(challengeData)}
+        });
+        if (typeof loadAdminDashboard === 'function') {
+          await loadAdminDashboard();
+        }
+        return { ok: true, res };
+      } catch (err) {
+        return { ok: false, error: err.message || String(err) };
+      }
+    })();
+  `);
+
+  if (!uploadResult?.ok) {
+    throw new Error(uploadResult?.error || 'Failed to upload Line It Up challenge through dashboard webview.');
+  }
+
+  lastCapturedImageDataUrl = null;
+  return uploadResult.res;
 }
 
 // --- Drag Resize Splitters ---

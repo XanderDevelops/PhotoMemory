@@ -118,6 +118,29 @@ h2 {
   gap: 10px;
 }
 
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.mode-toggle button {
+  min-height: 32px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.mode-toggle button.active {
+  background: var(--gold);
+  border: 2px solid var(--line);
+  box-shadow: 0 2px 0 var(--line);
+}
+
 .desktop-grid {
   height: calc(100vh - 78px);
   display: grid;

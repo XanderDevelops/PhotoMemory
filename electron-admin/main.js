@@ -15,6 +15,10 @@ function defaultImagesRoot() {
   return path.resolve(__dirname, '..', 'content', 'daily-challenges', 'images');
 }
 
+function defaultLineItUpImagesRoot() {
+  return path.resolve(__dirname, '..', 'content', 'line-it-up-daily-challenges', 'images');
+}
+
 function defaultChallengeRoot(rootPath = defaultImagesRoot()) {
   return path.resolve(rootPath, '..', 'challenges');
 }
@@ -75,14 +79,18 @@ async function openInChrome(url = CHATGPT_LOGIN_URL) {
 
 function createWindow() {
   const chatSession = session.fromPartition('persist:photo-memory-chatgpt');
-  chatSession.setUserAgent(CHROME_UA);
+  const defaultUA = chatSession.getUserAgent();
+  const cleanUA = defaultUA
+    .replace(/Electron\/\S+\s?/g, '')
+    .replace(/PhotoMemory\/\S+\s?/g, '')
+    .replace(/electron-admin\/\S+\s?/g, '');
+  
+  chatSession.setUserAgent(cleanUA);
+
   chatSession.webRequest.onBeforeSendHeaders((details, callback) => {
     const requestHeaders = {
       ...details.requestHeaders,
-      'User-Agent': CHROME_UA,
-      'sec-ch-ua': '"Chromium";v="148", "Google Chrome";v="148", "Not=A?Brand";v="99"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"',
+      'User-Agent': cleanUA,
     };
     callback({ requestHeaders });
   });
@@ -229,29 +237,349 @@ function normalizeQuestions(rawValue) {
 }
 
 function buildPromptPack(dateValue) {
+
+  function hashDate(str) {
+    let hash = 0;
+
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+
+    return Math.abs(hash);
+  }
+
+  const LOCATIONS = [
+    'tiny apartment kitchen',
+    'retro arcade',
+    'school classroom',
+    'supermarket aisle',
+    'family garage',
+    'beach picnic',
+    'library reading area',
+    'camping tent',
+    'bakery counter',
+    'train station waiting area',
+    'pet shop',
+    'toy store',
+    'music studio',
+    'office break room',
+    'rooftop garden',
+    'museum gift shop',
+    'small convenience store',
+    'food truck area',
+    'art classroom',
+    'messy living room',
+    'flea market stall',
+    'bus stop',
+    'garden shed',
+    'birthday party table',
+    'old attic',
+    'school cafeteria'
+  ];
+
+  const MOODS = [
+    'warm sunset',
+    'rainy afternoon',
+    'bright sunny morning',
+    'cozy evening',
+    'cloudy daytime',
+    'golden hour',
+    'late night',
+    'soft morning light'
+  ];
+
+  const ACTIVITIES = [
+    'preparing for a birthday',
+    'cleaning up after a meal',
+    'working on a school project',
+    'packing for a trip',
+    'repairing something',
+    'setting up decorations',
+    'preparing food',
+    'sorting old objects',
+    'getting ready for a picnic',
+    'organizing supplies',
+    'taking a break',
+    'shopping for groceries',
+    'playing a board game',
+    'painting something',
+    'fixing a bicycle',
+    'building a toy',
+    'watering plants',
+    'feeding pets',
+    'doing laundry',
+    'making coffee',
+    'reading quietly',
+    'studying for a test',
+    'wrapping gifts',
+    'moving into a new place',
+    'searching for something lost',
+    'decorating cookies',
+    'making pizza',
+    'assembling furniture',
+    'cleaning after a party',
+    'hosting a movie night',
+    'playing video games',
+    'taking photos',
+    'drawing cartoons',
+    'preparing camping gear',
+    'washing a car',
+    'repairing electronics',
+    'setting up a yard sale',
+    'getting ready for school',
+    'preparing breakfast',
+    'painting a wall',
+    'organizing books',
+    'building a science project',
+    'writing letters',
+    'packing lunch',
+    'gardening',
+    'getting ready for Halloween',
+    'setting up holiday decorations',
+    'preparing for a concert',
+    'making crafts',
+    'training a pet',
+    'making smoothies',
+    'playing music',
+    'building a puzzle',
+    'hosting a game night',
+    'getting ready for a beach day',
+    'making popcorn',
+    'cleaning a fish tank',
+    'taking care of plants',
+    'decorating a classroom',
+    'repairing a skateboard',
+    'preparing for a storm',
+    'setting up fireworks',
+    'painting miniatures',
+    'baking bread',
+    'making sandwiches',
+    'fixing plumbing',
+    'organizing toys',
+    'preparing a surprise',
+    'making ice cream',
+    'preparing art supplies',
+    'setting up a picnic',
+    'feeding birds',
+    'taking care of a sick pet',
+    'building a robot',
+    'practicing magic tricks',
+    'setting up a birthday cake',
+    'making hot chocolate',
+    'preparing a barbecue',
+    'fixing a lamp',
+    'testing inventions',
+    'watching the rain',
+    'setting up a treasure hunt',
+    'repairing old furniture',
+    'preparing gardening tools',
+    'doing homework',
+    'making decorations',
+    'planning a road trip',
+    'packing moving boxes',
+    'setting up a camera',
+    'playing cards',
+    'cleaning sports equipment',
+    'getting ready for visitors',
+    'preparing party snacks',
+    'painting signs',
+    'washing dishes',
+    'building a blanket fort',
+    'taking care of baby animals',
+    'restocking shelves',
+    'testing recipes'
+  ];
+
+  const ANIMALS = [
+    'orange cat',
+    'sleepy dog',
+    'small hamster',
+    'green parrot',
+    'goldfish',
+    'tiny turtle',
+    'white rabbit',
+    'black cat',
+    'golden retriever',
+    'duckling',
+    'baby chick',
+    'brown owl',
+    'playful corgi',
+    'striped kitten',
+    'tiny frog',
+    'raccoon',
+    'hedgehog',
+    'ferret',
+    'goat',
+    'pony',
+    'seagull',
+    'pigeon',
+    'crow',
+    'penguin',
+    'red panda',
+    'fox',
+    'shiba inu',
+    'beagle',
+    'dalmatian',
+    'tabby cat',
+    'calico cat',
+    'mouse',
+    'gecko',
+    'iguana',
+    'crab',
+    'seahorse',
+    'butterfly',
+    'bee',
+    'ladybug',
+    'snail',
+    'squirrel',
+    'chipmunk',
+    'koala',
+    'sloth',
+    'alpaca',
+    'llama',
+    'piglet',
+    'cow',
+    'sheep',
+    'deer',
+    'baby dinosaur toy made to look alive'
+  ];
+
+  const seed = hashDate(dateValue);
+
+  const location = LOCATIONS[seed % LOCATIONS.length];
+  const mood = MOODS[(seed * 7) % MOODS.length];
+  const activity = ACTIVITIES[(seed * 13) % ACTIVITIES.length];
+
+  const animalCount = seed % 3;
+
+  const selectedAnimals = [];
+
+  for (let i = 0; i < animalCount; i++) {
+    selectedAnimals.push(
+      ANIMALS[(seed * (i + 5)) % ANIMALS.length]
+    );
+  }
+
   const scenePrompt = [
     `Create the image-generation prompt for one Photo Memory daily challenge for ${dateValue}.`,
-    'You choose the scene yourself.',
-    'Make it a simple, memorable everyday scene with 8 to 12 visible details that players can later remember.',
-    'Include objects, colors, positions, and small countable details.',
-    'Use a vintage rubberhose colorful cartoony style, consistent, clean, playful retro, warm light, clean composition, no text labels, no logos, and no UI.',
-    'Return only the final image prompt as plain text. Do not generate questions yet.'
-  ].join(' ');
+    '',
+    `The scene MUST take place inside or around a ${location}.`,
+    `The overall mood should feel like ${mood}.`,
+    `The scene should imply that someone was ${activity}.`,
+    '',
+    ...(selectedAnimals.length > 0
+      ? [`Include these animals naturally in the scene: ${selectedAnimals.join(', ')}.`]
+      : []),
+    '',
+    'IMPORTANT:',
+    'The image MUST stay VERY SIMPLE and EASY TO READ.',
+    'Do NOT overcrowd the scene.',
+    'Use NO MORE THAN 5 MAIN ELEMENTS OR FOCAL OBJECT GROUPS.',
+    'The scene should feel more empty than full, with lots of negative space.',
+    'The composition should be instantly understandable at a glance.',
+    '',
+    'Examples of main elements:',
+    '- a table',
+    '- a couch',
+    '- a birthday cake',
+    '- a pet',
+    '- a backpack',
+    '',
+    'Small supporting details are allowed, but the scene should still feel visually clean.',
+    '',
+    'Include:',
+    '- 8 to 12 total visible details',
+    '- colorful objects',
+    '- memorable object placements',
+    '- environmental storytelling',
+    '- one or two funny or unexpected details',
+    '',
+    'The scene should naturally support:',
+    '- direct memory questions',
+    '- contextual/common-sense questions',
+    '',
+    'Examples of contextual clues:',
+    '- wet umbrella suggesting rain',
+    '- birthday decorations suggesting a celebration',
+    '- grocery bags suggesting shopping',
+    '- packed luggage suggesting travel',
+    '- beach towels suggesting swimming',
+    '- burnt toast suggesting cooking failed',
+    '',
+    'Avoid visual clutter.',
+    'Avoid crowded environments.',
+    'Avoid tiny unreadable details.',
+    'Avoid repeating laundromats, cafes, coffee shops, or plain bedrooms.',
+    '',
+    'Every daily challenge must feel unique and visually distinct.',
+    '',
+    'Use a flat vintage rubberhose colorful cartoony style.',
+    'Consistent retro art style.',
+    'Warm lighting.',
+    'Clean composition.',
+    'Simple readable shapes.',
+    'No text labels.',
+    'No logos.',
+    'No UI.',
+    '',
+    'Return ONLY the final image-generation prompt as plain text.',
+    'Do not generate questions yet.'
+  ].join('\n');
 
   const questionsPrompt = [
-    `Using the image you just generated for ${dateValue}, create a random number of multiple-choice memory questions between 3 and 6.`,
-    'Ask about visible objects, colors, positions, quantities, and small details in the image.',
-    'Ensure the questions are creative and entirely themed around your generated scene. The example below is purely for structural reference of the JSON schema—do not repeat this example\'s scenic content.',
-    'You MUST place the correct answer in a random position (not always first) for each question.',
-    'You MUST wrap your final JSON code in a single formatless block inside `<TO COPY>` and `</TO COPY>` tags exactly like this:',
+    `Using the image you generated for ${dateValue}, create between 3 and 6 multiple-choice memory questions.`,
+    '',
+    'Mix different question TYPES.',
+    '',
+    'Some questions should be DIRECT MEMORY questions:',
+    '- colors',
+    '- positions',
+    '- quantities',
+    '- visible objects',
+    '- animals',
+    '',
+    'Some questions should be CONTEXTUAL or COMMON-SENSE questions:',
+    '- what someone was probably doing',
+    '- what likely happened recently',
+    '- what the environment suggests',
+    '- deductions based on visible clues',
+    '',
+    'Examples:',
+    '- "Why were there beach towels near the chairs?"',
+    '- "What suggests it had been raining?"',
+    '- "What was someone most likely preparing for?"',
+    '',
+    'Do NOT make contextual questions ambiguous.',
+    'The answer should feel obvious from the visual clues.',
+    '',
+    'Avoid repetitive "How many..." questions.',
+    'Vary the question styles naturally.',
+    '',
+    'You MUST randomize the correct answer position.',
+    'Do NOT always place the correct answer first.',
+    '',
+    'Return ONLY valid JSON wrapped EXACTLY like this:',
+    '',
     '<TO COPY>',
     '{"questions":[{"question_text":"What was beside the red mug?","answers":[{"answer_text":"A blue notebook","is_correct":true},{"answer_text":"A green backpack","is_correct":false},{"answer_text":"A brass bell","is_correct":false},{"answer_text":"A toy plane","is_correct":false}]}]}',
     '</TO COPY>',
-    'Each question must have 4 short answers and exactly one correct answer. Do not include markdown codeblocks inside the tags.'
+    '',
+    'Each question must contain:',
+    '- question_text',
+    '- 4 answers',
+    '- exactly 1 correct answer',
+    '',
+    'Do NOT include markdown codeblocks inside the tags.'
   ].join('\n');
 
   return {
     date: dateValue,
+    seed,
+    location,
+    mood,
+    activity,
+    selectedAnimals,
     scenePrompt,
     imagePrompt: '',
     questionsPrompt,
@@ -259,7 +587,7 @@ function buildPromptPack(dateValue) {
       'Step 1 - ask ChatGPT to create the scene/image prompt:',
       scenePrompt,
       '',
-      'Step 2 - send the scene prompt back to ChatGPT to generate the image.',
+      'Step 2 - send the generated prompt back to ChatGPT to create the image.',
       '',
       'Step 3 - after the image is finished, ask for challenge JSON:',
       questionsPrompt,
@@ -267,7 +595,56 @@ function buildPromptPack(dateValue) {
   };
 }
 
-function loadChallenge(rootPath, dateValue) {
+function buildLineItUpPromptPack(dateValue) {
+  const ideaPrompt = [
+    `Create one Line It Up daily challenge for ${dateValue}.`,
+    '',
+    'The player will see five generated image cards in a random order and must infer the hidden ordering rule.',
+    '',
+    'Requirements:',
+    '- Pick one ordered idea with exactly five items.',
+    '- Be creative with the domain: historical events, historical people, inventions, countries, cities, landmarks, geography, population, sports teams, World Cups/trophies, languages, space objects, cultural facts, famous works, or everyday objects are all allowed.',
+    '- Do NOT make the order too obvious like oldest-to-newest, created first, a life cycle, recipe steps, alphabet order, or a timeline with dates in the item names.',
+    '- Prefer hidden but fair clues that the player can discover by looking closely or thinking about the names: color grading, number of repeated visual details, shape complexity, amount of something shown, name length, first/last letter, syllables, category size, population, land area, trophy count, distance, height, depth, speed, rarity, usual size/weight/value, or another objective property.',
+    '- It can still use history, people, countries, sports, or facts, but avoid the plain "what happened first" version unless the ordering clue is disguised in a more playful way.',
+    '- The puzzle should feel surprising but reasonable. After the answer is revealed, the reaction should be "ohh, that makes sense", not "are you serious?"',
+    '- The five images should look like a set, but they should not directly reveal the order by showing arrows, numbers, stages, progress, or labels. Subtle countable details or color shifts are allowed when they are the hidden clue.',
+    '- The player-facing order_description must be a subtle clue, not the answer. Example: "Small clue: look for what quietly changes across the set."',
+    '- Avoid expert-only trivia. A curious player should be able to reason it out or make a good guess.',
+    '- Keep each item name short enough for a game card and do not put the ordering value in the item name.',
+    '- Make the puzzle playful, visual, and satisfying.',
+    '- Create an image prompt for ONE single 1x5 horizontal strip made of five square icon panels.',
+    '- Each panel must be a separate square rounded-corner icon card so the app can slice the strip into five square images.',
+    '- All five icons must share the same style, scale, lighting, line weight, and camera angle.',
+    '- Art style must match the provided coffee mug icon: flat cartoony illustration, rounded-corner colored tile/box, centered simple subject, clean dark outline, soft flat shading, warm highlight, polished casual game asset.',
+    '- The rounded square tile/card must have NO outline, NO border, and NO stroke around its edge. The centered subject may have a clean dark outline.',
+    '- Transparent outside the rounded cards. No full scene. No text labels. No numbers. No arrows. No UI. No logos.',
+    '',
+    'Return ONLY valid JSON wrapped EXACTLY like this:',
+    '',
+    '<TO COPY>',
+    '{"theme":"Market Treats by Hidden Count","order_description":"Small clue: count what quietly repeats.","items":["Lemon Tart","Berry Pie","Apple Basket","Orange Stand","Grape Bowl"],"image_prompt":"Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos."}',
+    '</TO COPY>',
+    '',
+    'Do not generate the image yet.'
+  ].join('\n');
+
+  return {
+    date: dateValue,
+    scenePrompt: ideaPrompt,
+    questionsPrompt: '',
+    fullPrompt: [
+      'Step 1 - ask ChatGPT to create the ordered Line It Up idea JSON:',
+      ideaPrompt,
+      '',
+      'Step 2 - send the returned image_prompt back to ChatGPT to generate one 1x5 horizontal strip.',
+      '',
+      'Step 3 - the app captures the image, slices it into five panels, and uploads the Line It Up daily challenge.',
+    ].join('\n')
+  };
+}
+
+function loadChallenge(rootPath, dateValue, mode = 'daily') {
   const imagePath = findImagePath(rootPath, dateValue);
   const jsonPath = challengeJsonPath(rootPath, dateValue);
   const challenge = fs.existsSync(jsonPath) ? safeJsonParse(fs.readFileSync(jsonPath, 'utf8')) : null;
@@ -279,7 +656,7 @@ function loadChallenge(rootPath, dateValue) {
     jsonPath,
     jsonExists: fs.existsSync(jsonPath),
     challenge,
-    promptPack: buildPromptPack(dateValue),
+    promptPack: mode === 'line-it-up' ? buildLineItUpPromptPack(dateValue) : buildPromptPack(dateValue),
   };
 }
 
@@ -329,6 +706,54 @@ function saveImageData(rootPath, dateValue, dataUrl) {
     destinationPath,
     scan: scanDailyFolder(rootPath),
     challenge: loadChallenge(rootPath, dateValue),
+  };
+}
+
+function saveLineItUpChallengeData(rootPath, dateValue, plan, dataUrl) {
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) throw new Error('ChatGPT image capture did not return image data.');
+  if (!plan?.theme || !plan?.order_description || !Array.isArray(plan.items) || plan.items.length !== 5) {
+    throw new Error('Line It Up plan must include theme, order_description, and five items.');
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const extension = mimeType.includes('webp')
+    ? '.webp'
+    : mimeType.includes('jpeg') || mimeType.includes('jpg')
+      ? '.jpg'
+      : '.png';
+  const parts = datePathParts(dateValue);
+  const monthPath = dateImageDirectory(rootPath, dateValue);
+  fs.mkdirSync(monthPath, { recursive: true });
+
+  const imagePath = path.join(monthPath, `${parts.day}${extension}`);
+  assertInsideRoot(rootPath, imagePath);
+  fs.writeFileSync(imagePath, Buffer.from(match[2], 'base64'));
+
+  const jsonPath = challengeJsonPath(rootPath, dateValue);
+  fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
+  const challenge = {
+    challenge_date: dateValue,
+    theme: plan.theme,
+    order_description: plan.order_description,
+    items: plan.items.map((name, index) => ({
+      name,
+      correct_index: index,
+    })),
+    prompt: plan.image_prompt || null,
+    image_path: path.relative(rootPath, imagePath).replace(/\\/g, '/'),
+    image_file: imagePath,
+    created_at: new Date().toISOString(),
+    source: 'chatgpt-webview',
+  };
+
+  fs.writeFileSync(jsonPath, `${JSON.stringify(challenge, null, 2)}\n`);
+
+  return {
+    destinationPath: imagePath,
+    jsonPath,
+    scan: scanDailyFolder(rootPath),
+    challenge: loadChallenge(rootPath, dateValue, 'line-it-up'),
   };
 }
 
@@ -450,13 +875,19 @@ function assertInsideRoot(rootPath, destinationPath) {
 }
 
 ipcMain.handle('app:dashboard-url', () => dashboardUrl());
-ipcMain.handle('daily:default-root', () => defaultImagesRoot());
-ipcMain.handle('daily:scan', (_event, rootPath) => scanDailyFolder(rootPath || defaultImagesRoot()));
+ipcMain.handle('daily:default-root', (_event, mode) => (
+  mode === 'line-it-up' ? defaultLineItUpImagesRoot() : defaultImagesRoot()
+));
+ipcMain.handle('daily:scan', (_event, rootPath, mode) => {
+  const fallbackRoot = mode === 'line-it-up' ? defaultLineItUpImagesRoot() : defaultImagesRoot();
+  return scanDailyFolder(rootPath || fallbackRoot);
+});
 
-ipcMain.handle('daily:pick-root', async () => {
+ipcMain.handle('daily:pick-root', async (_event, mode) => {
+  const isLineItUp = mode === 'line-it-up';
   const result = await dialog.showOpenDialog({
-    title: 'Select daily challenge images folder',
-    defaultPath: defaultImagesRoot(),
+    title: isLineItUp ? 'Select Line It Up daily challenge images folder' : 'Select daily challenge images folder',
+    defaultPath: isLineItUp ? defaultLineItUpImagesRoot() : defaultImagesRoot(),
     properties: ['openDirectory', 'createDirectory'],
   });
 
@@ -502,13 +933,15 @@ ipcMain.handle('daily:import-image', async (_event, payload) => {
 
 ipcMain.handle('daily:prompt-pack', (_event, payload) => {
   if (!payload?.date) throw new Error('Choose a date first.');
-  return buildPromptPack(payload.date);
+  return payload.mode === 'line-it-up'
+    ? buildLineItUpPromptPack(payload.date)
+    : buildPromptPack(payload.date);
 });
 
 ipcMain.handle('daily:load-challenge', (_event, payload) => {
-  const rootPath = payload.rootPath || defaultImagesRoot();
+  const rootPath = payload.rootPath || (payload.mode === 'line-it-up' ? defaultLineItUpImagesRoot() : defaultImagesRoot());
   if (!payload.date) throw new Error('Choose a date first.');
-  return loadChallenge(rootPath, payload.date);
+  return loadChallenge(rootPath, payload.date, payload.mode || 'daily');
 });
 
 ipcMain.handle('daily:save-questions', (_event, payload) => {
@@ -522,6 +955,12 @@ ipcMain.handle('daily:save-image-data', (_event, payload) => {
   const rootPath = payload.rootPath || defaultImagesRoot();
   if (!payload.date) throw new Error('Choose a date first.');
   return saveImageData(rootPath, payload.date, payload.dataUrl);
+});
+
+ipcMain.handle('line-it-up:save-challenge-data', (_event, payload) => {
+  const rootPath = payload.rootPath || defaultLineItUpImagesRoot();
+  if (!payload.date) throw new Error('Choose a date first.');
+  return saveLineItUpChallengeData(rootPath, payload.date, payload.plan, payload.dataUrl);
 });
 
 ipcMain.handle('daily:read-image-base64', (_event, payload) => {

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Line It Up by Photo Memory</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Flat Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PeerJS CDN for WebRTC P2P Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    
+    <!-- Platform and Game Style sheets -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- HEADER -->
+        <header class="game-header">
+            <div class="logo-area">
+                <span class="logo-title">Line It Up</span>
+                <span class="logo-tagline">by Photo. Memory</span>
+            </div>
+            
+            <div class="header-controls">
+                <button id="iap-remove-ads-btn" class="header-btn premium-btn" title="Remove Ads">
+                    <i class="fa-solid fa-crown"></i>
+                </button>
+                <button id="tutorial-btn" class="header-btn" title="How to Play">
+                    <i class="fa-solid fa-question"></i>
+                </button>
+                <button id="audio-toggle-btn" class="header-btn" title="Toggle Mute">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <div class="player-pill">
+                    <img id="header-avatar" class="avatar-sm" src="assets/icons/people/person_beanie.png" alt="Avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                    <span id="header-username">Player</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LOBBY -->
+        <main id="lobby-panel" class="panel active">
+            <!-- TAB SELECTION -->
+            <nav class="lobby-tabs">
+                <button class="tab-btn active" data-tab="solo-panel">
+                    <i class="fa-solid fa-user"></i> Solo
+                </button>
+                <button class="tab-btn" data-tab="bottle-panel">
+                    <i class="fa-solid fa-bottle-droplet"></i> Bottles
+                </button>
+                <button class="tab-btn" data-tab="multiplayer-panel">
+                    <i class="fa-solid fa-users"></i> P2P
+                </button>
+                <button class="tab-btn" data-tab="daily-panel-liu">
+                    <i class="fa-solid fa-calendar-days"></i> Daily
+                </button>
+            </nav>
+
+            <div class="tab-contents">
+                <!-- 1. SOLO PANEL -->
+                <section id="solo-panel" class="tab-content active">
+                    <div class="card card-hero">
+                        <div class="card-tag">Authoritative Deduction</div>
+                        <h2>Standard Card Guessing</h2>
+                        <p class="desc">A secret sequence of 5 item cards is generated from a category. Swap cards on your board and try to align them perfectly within 8 guesses!</p>
+                        
+                        <div class="category-selection">
+                            <label for="solo-category-select">Select Card Category:</label>
+                            <div class="retro-select-wrapper">
+                                <select id="solo-category-select" class="retro-select">
+                                    <option value="animals">🐾 Animals</option>
+                                    <option value="foods">🍔 Foods</option>
+                                    <option value="objects">📦 Objects</option>
+                                    <option value="people">🧑 People</option>
+                                    <option value="places">🏛️ Places</option>
+                                    <option value="space">🚀 Space</option>
+                                    <option value="water_animals">🐠 Water Animals</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button id="start-solo-btn" class="btn btn-primary btn-large">
+                            <i class="fa-solid fa-play"></i> Play Solo Match
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 2. BOTTLE PANEL -->
+                <section id="bottle-panel" class="tab-content">
+                    <div class="card card-hero-alt">
+                        <div class="card-tag">Trending Gameplay</div>
+                        <h2>Color Bottle Sorting</h2>
+                        <p class="desc">Ditch the categories! 5 beautifully shaped glass test tubes are filled with distinct liquid color gradients. Organize them to crack the hidden sequence pattern!</p>
+                        
+                        <button id="start-bottle-btn" class="btn btn-secondary btn-large">
+                            <i class="fa-solid fa-bottle-droplet"></i> Play Bottle Mode
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. MULTIPLAYER PANEL -->
+                <section id="multiplayer-panel" class="tab-content">
+                    <div class="multiplayer-grid">
+                        <!-- Direct P2P Connections -->
+                        <div class="card">
+                            <h2>Zero-Cost Multiplayer</h2>
+                            <p class="desc">Direct WebRTC data channels broker a connection between browsers instantly without server costs! Share your code or search for ranked opponents.</p>
+                            
+                            <div class="mp-actions">
+                                <button id="host-match-btn" class="btn btn-accent">
+                                    <i class="fa-solid fa-circle-nodes"></i> Host Friendly
+                                </button>
+                                
+                                <div class="separator"><span>OR JOIN HOST</span></div>
+                                
+                                <div class="join-input-group">
+                                    <input type="text" id="join-peer-id-input" placeholder="Enter Host Peer ID..." class="retro-input">
+                                    <button id="join-match-btn" class="btn btn-primary">
+                                        <i class="fa-solid fa-right-to-bracket"></i> Join
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matchmaking & Invites -->
+                        <div class="card">
+                            <h2>Matchmaking & Social</h2>
+                            
+                            <div class="social-lobby">
+                                <div class="player-customizer">
+                                    <h3>Configure Profile</h3>
+                                    <div class="customizer-inputs">
+                                        <input type="text" id="profile-username-input" class="retro-input" placeholder="Enter Username...">
+                                        <button id="save-profile-btn" class="btn btn-secondary">Save</button>
+                                    </div>
+                                    <div class="avatar-picker">
+                                        <img class="avatar-option active" data-avatar="person_beanie" src="assets/icons/people/person_beanie.png" alt="Boy">
+                                        <img class="avatar-option" data-avatar="person_ponytail" src="assets/icons/people/person_ponytail.png" alt="Girl">
+                                        <img class="avatar-option" data-avatar="person_blue_cap" src="assets/icons/people/person_blue_cap.png" alt="Man">
+                                        <img class="avatar-option" data-avatar="person_hair_bun" src="assets/icons/people/person_hair_bun.png" alt="Woman">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 4. DAILY CHALLENGE PANEL -->
+                <section id="daily-panel-liu" class="tab-content">
+                    <div class="card card-hero">
+                        <div class="card-tag">Line It Up Daily</div>
+                        <h2>Daily Challenge</h2>
+                        <p class="desc">A new hand-crafted puzzle generates every single day! Sliced from beautiful custom AI artwork. Complete them to build your daily streak!</p>
+                        
+                        <!-- Premium Unlock Banner -->
+                        <div id="daily-premium-banner" class="daily-premium-banner">
+                            <div class="premium-banner-info">
+                                <i class="fa-solid fa-crown"></i>
+                                <div>
+                                    <strong>Premium Challenge Access</strong>
+                                    <span>Play all past days' challenges & bypass all replay cooldowns instantly!</span>
+                                </div>
+                            </div>
+                            <button id="buy-daily-premium-btn" class="btn btn-accent btn-sm">
+                                Unlock for $4.99
+                            </button>
+                        </div>
+                        
+                        <!-- Calendar Days Widget -->
+                        <div class="calendar-wrapper">
+                            <h3>📅 Last 7 Days Challenges</h3>
+                            <div id="daily-calendar-grid" class="calendar-grid">
+                                <!-- Filled dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Day details and Actions -->
+                        <div id="selected-day-details" class="selected-day-card" style="display: none;">
+                            <h3 id="selected-day-title">Challenge: May 31, 2026</h3>
+                            <div class="challenge-meta-row">
+                                <span class="challenge-badge theme-badge" id="selected-day-theme">Theme: Pop Culture</span>
+                                <span class="challenge-badge status-badge" id="selected-day-status">Completed</span>
+                            </div>
+                            <p class="challenge-desc" id="selected-day-desc">Sequence deduction prompt.</p>
+                            
+                            <div class="play-action-area">
+                                <!-- Play/Replay controls -->
+                                <button id="play-daily-btn" class="btn btn-primary btn-large" style="width: 100%;">
+                                    <i class="fa-solid fa-play"></i> Play Challenge
+                                </button>
+                                
+                                <div id="daily-ad-replay-area" style="display: none; text-align: center;">
+                                    <p class="cooldown-info-text">You already solved this daily challenge! Replay to get a better score by watching a rewarded ad.</p>
+                                    <button id="replay-daily-ad-btn" class="btn btn-secondary btn-large" style="width: 100%;">
+                                        <i class="fa-solid fa-video"></i> Replay with Ad
+                                    </button>
+                                </div>
+
+                                <div id="daily-cooldown-area" style="display: none; text-align: center;">
+                                    <p class="cooldown-info-text"><i class="fa-solid fa-hourglass-half"></i> Replay ad cooldown. Next replay available in: <strong id="daily-cooldown-timer">10:00</strong></p>
+                                    <button class="btn btn-secondary btn-large" disabled style="width: 100%; cursor: not-allowed; opacity: 0.6;">
+                                        Ad Cooldown Active
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="no-challenges-placeholder" class="empty-table" style="text-align: center; padding: 20px; display: none;">
+                            No daily challenges are available. Contact admin to create challenges.
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- STATISTICS & LEADERBOARDS AREA -->
+            <footer class="lobby-stats-leaderboards">
+                <!-- 1. Statistics Panel -->
+                <div class="card stats-card">
+                    <h3>🏆 Personal Performance</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value" id="stats-solo-avg">-</span>
+                            <span class="stat-label">Solo Avg Guesses</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="stats-total-played">0</span>
+                            <span class="stat-label">Total Matches</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="stats-wins">0</span>
+                            <span class="stat-label">Ranked Wins</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="stats-win-rate">0%</span>
+                            <span class="stat-label">Win Rate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Leaderboards Panel -->
+                <div class="card leaderboard-card">
+                    <h3>👑 Local Leaderboard</h3>
+                    <div class="leaderboard-container">
+                        <table class="retro-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Best Solve</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <tr>
+                                    <td colspan="4" class="empty-table">No history recorded yet. Beat Solo mode to rank up!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </footer>
+        </main>
+
+        <!-- GAMEPLAY PANEL -->
+        <main id="gameplay-panel" class="panel">
+            <div class="gameplay-header">
+                <div class="mode-info">
+                    <span id="gameplay-mode-label" class="gameplay-tag">Solo Mode</span>
+                    <h2 id="gameplay-topic-label">Category: Space</h2>
+                </div>
+                
+                <!-- multiplayer details -->
+                <div id="multiplayer-vs-pill" class="vs-pill">
+                    <div class="vs-player">
+                        <img id="player-vs-avatar" class="avatar-sm" src="assets/icons/people/person_beanie.png" alt="Player">
+                        <span id="player-vs-name">You</span>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="vs-player">
+                        <img id="opponent-vs-avatar" class="avatar-sm" src="assets/icons/people/person_ponytail.png" alt="Opponent">
+                        <span id="opponent-vs-name">Opponent</span>
+                    </div>
+                </div>
+
+                <div class="gameplay-stats">
+                    <div id="gameplay-timer-container" class="timer-box">
+                        <i class="fa-solid fa-clock"></i> <span id="gameplay-timer">30</span>s
+                    </div>
+                    <div id="guess-counter-box" class="guess-counter">
+                        Guesses left: <span id="guesses-remaining">8</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gameplay-main-layout">
+                <!-- THE BOARD (CARDS OR BOTTLES CONTAINER) -->
+                <section class="gameplay-board">
+                    <div id="slots-container" class="slots-container">
+                        <!-- Dynamic slots instantiated here -->
+                    </div>
+                    <div class="board-hints">
+                        💡 Tap a card/bottle, then tap another to swap their positions. Tap Submit when ready!
+                    </div>
+                </section>
+
+                <!-- ROUND GUESS HISTORY -->
+                <aside class="gameplay-history">
+                    <h3>📜 Guess Records</h3>
+                    <div class="history-lists">
+                        <div class="history-list-wrapper">
+                            <h4>Your Guesses</h4>
+                            <div id="player-history-list" class="history-scroll-box">
+                                <div class="empty-history">No submissions yet</div>
+                            </div>
+                        </div>
+                        
+                        <div id="opponent-history-wrapper" class="history-list-wrapper">
+                            <h4>Opponent Guesses</h4>
+                            <div id="opponent-history-list" class="history-scroll-box">
+                                <div class="empty-history">No submissions yet</div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- GAME FOOTER ACTIONS -->
+            <footer class="gameplay-actions">
+                <button id="forfeit-btn" class="btn btn-danger">
+                    <i class="fa-solid fa-flag"></i> Exit & Forfeit
+                </button>
+                <div id="waiting-overlay-bar" class="waiting-bar">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Waiting for opponent guess...
+                </div>
+                <button id="submit-guess-btn" class="btn btn-primary btn-large">
+                    <i class="fa-solid fa-check"></i> Submit Guess
+                </button>
+            </footer>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS & OVERLAYS ==================== -->
+
+    <!-- 1. HOST LOBBY MODAL -->
+    <div id="host-lobby-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="modal-title alert-title">Lobby Hosted Successfully!</h2>
+            <p>Your unique WebRTC Peer ID has been generated. Share this ID or send the direct link to your friend to start a zero-cost P2P match!</p>
+            
+            <div class="peer-code-box">
+                <span class="label">Host Peer ID:</span>
+                <span id="host-peer-id-text" class="peer-code">----</span>
+            </div>
+
+            <div class="invite-link-group">
+                <input type="text" id="invite-link-input" readonly class="retro-input invite-input">
+                <button id="copy-invite-link-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-copy"></i> Copy Link
+                </button>
+            </div>
+
+            <div class="modal-spinner">
+                <i class="fa-solid fa-spinner fa-spin"></i> Waiting for player to connect...
+            </div>
+
+            <button id="close-host-modal-btn" class="btn btn-danger btn-block">
+                <i class="fa-solid fa-circle-xmark"></i> Cancel Hosting
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. MATCH END RESULT MODAL -->
+    <div id="match-end-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h1 id="result-title" class="result-headline">VICTORY!</h1>
+            <p id="result-description" class="result-desc">You cracked the hidden combination in 5 rounds!</p>
+            
+            <div class="result-reveal">
+                <h3 id="result-reveal-header">Authoritative Secret Sequence:</h3>
+                <div id="secret-reveal-container" class="reveal-container">
+                    <!-- Dynamic correct sequence items -->
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button id="result-lobby-btn" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-house"></i> Return to Lobby
+                </button>
+                <button id="result-rematch-btn" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-rotate-right"></i> Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. REWARDED SECOND CHANCE MODAL -->
+    <div id="second-chance-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="modal-title" style="color: #FF3E4D;">💔 Out of Guesses!</h2>
+            <p>You used all 8 guesses but failed to solve the sequence. Don't worry! Watch a rewarded ad to get a second chance with **+2 extra guesses**!</p>
+            
+            <div class="second-chance-actions">
+                <button id="second-chance-watch-btn" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-video"></i> Watch Ad (+2 Guesses)
+                </button>
+                <button id="second-chance-giveup-btn" class="btn btn-danger btn-block">
+                    <i class="fa-solid fa-face-sad-tear"></i> No thanks, Accept Defeat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TUTORIAL GUIDE MODAL -->
+    <div id="tutorial-modal" class="modal-overlay">
+        <div class="modal-box tutorial-box">
+            <h2 class="modal-title">📖 How to Play</h2>
+            
+            <div class="carousel">
+                <!-- Slide 1 -->
+                <div class="carousel-slide active">
+                    <h3>1. The Goal</h3>
+                    <p>Arrange 5 item cards (or colored test tubes) to match a hidden sequence pattern in the minimum number of attempts. You have **8 guesses** total in Solo mode!</p>
+                    <div class="tutorial-graphic">
+                        <div class="t-card">🐾 Card A</div>
+                        <div class="t-card">🐾 Card B</div>
+                        <div class="t-card">🐾 Card C</div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="carousel-slide">
+                    <h3>2. Swapping & Submitting</h3>
+                    <p>Click/Tap any card/bottle to select it, then tap another card/bottle to swap their positions. When you are confident in your new layout, click **Submit Guess**.</p>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="carousel-slide">
+                    <h3>3. Evaluation Feedback</h3>
+                    <p>After each submission, the engine reports the exact number of items that are in their **correct target index** (e.g. <code>3/5 correct</code>).</p>
+                    <p>Use logic to deduce which items are correctly aligned and resolve the sequence!</p>
+                </div>
+            </div>
+
+            <div class="carousel-controls">
+                <button id="tutorial-prev-btn" class="btn btn-secondary" disabled>Prev</button>
+                <span id="tutorial-indicator">1 / 3</span>
+                <button id="tutorial-next-btn" class="btn btn-primary">Next</button>
+            </div>
+
+            <button id="close-tutorial-btn" class="btn btn-danger btn-block" style="margin-top: 15px;">
+                Close Tutorial
+            </button>
+        </div>
+    </div>
+
+    <!-- 5. OTHER PLAYER STATS VIEW MODAL -->
+    <div id="view-stats-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="modal-title" id="view-stats-player-name">Player Stats</h2>
+            
+            <div class="view-stats-grid">
+                <div class="stat-box">
+                    <span class="stat-value" id="view-stats-solo-avg">-</span>
+                    <span class="stat-label">Solo Average Guesses</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value" id="view-stats-total">0</span>
+                    <span class="stat-label">Total Matches Played</span>
+                </div>
+            </div>
+
+            <button id="close-view-stats-btn" class="btn btn-primary btn-block">
+                Close Stats
+            </button>
+        </div>
+    </div>
+
+    <!-- Supabase CDN Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Game scripts -->
+    <script src="platform.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{
+  "challenge_date": "2026-05-30",
+  "image_path": "2026/may/30.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\may\\30.png",
+  "created_at": "2026-05-28T04:13:03.044Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A cheerful vintage neighborhood laundromat in a colorful 1930s rubberhose cartoon style, warm afternoon sunlight entering from large front windows on the right, playful retro atmosphere with clean readable composition and soft vintage textures. In the center, a rolling metal laundry cart contains exactly 3 folded towels: one pink, one teal, and one yellow. On the left wall, exactly 4 round washing machines are visible, with the second machine door slightly open and showing striped socks inside. A smiling orange detergent bottle sits on top of the third machine beside a stack of 5 silver coins. Near the back wall stands a red vending machine with exactly 2 soda bottles visible behind the glass. A small wooden bench near the bottom right holds a purple handbag and a folded newspaper. Hanging from a clothesline across the upper part of the scene are exactly 3 white shirts and 1 green sock attached with tiny clothespins. A sleepy brown dog lies near the cart on a black-and-white tiled floor. Beside the entrance door is a yellow umbrella stand holding exactly 2 umbrellas: one blue and one red. Bright warm cartoon palette, subtle film grain, soft shadows, playful rubberhose character styling, no text, no logos, no interface elements.",
+  "questions": [
+    {
+      "question_text": "What color was the handbag on the bench?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Purple",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Blue",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Brown",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was hanging on the clothesline besides the shirts?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "A red scarf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A green sock",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A yellow towel",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A blue hat",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "How many washing machines were visible on the left wall?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "6",
+          "is_correct": false
+        },
+        {
+          "answer_text": "3",
+          "is_correct": false
+        },
+        {
+          "answer_text": "5",
+          "is_correct": false
+        },
+        {
+          "answer_text": "4",
+          "is_correct": true
+        }
+      ]
+    },
+    {
+      "question_text": "What was inside the laundry cart?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "Three folded towels",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Cleaning bottles",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Loose socks",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Fresh bread",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What animal was sleeping on the floor?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A white cat",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A brown dog",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A gray rabbit",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A small fox",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What stood beside the entrance door?",
+      "order_index": 5,
+      "answers": [
+        {
+          "answer_text": "A coat rack",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A broom bucket",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A yellow umbrella stand",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A tall lamp",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

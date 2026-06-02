@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-06-07",
+  "image_path": "2026/jun/7.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\jun\\7.png",
+  "created_at": "2026-05-28T04:55:33.466Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A cozy toy store interior during golden hour in a flat vintage rubberhose cartoon style. Warm orange sunlight pours through the front windows onto polished wooden floors and colorful toy displays. Keep the composition extremely simple and easy to read with only 5 main focal groups: a picnic setup table, a toy shelf, a picnic basket area, a goldfish bowl, and a playful raccoon.\n\nOn the picnic setup table: a red-and-white checkered picnic blanket partially folded beside a wicker picnic basket filled with colorful toy sandwiches and fruit. A yellow thermos and two stacked plates sit neatly nearby. A small toy kite leans against the basket, strongly suggesting someone was preparing for an outdoor picnic trip.\n\nFunny unexpected detail: a curious raccoon wearing a tiny sunhat is sneaking one toy sandwich from the picnic basket while pretending nobody notices. Another playful detail: a goldfish inside a round fishbowl is staring directly at the raccoon while a tiny bubble floats upward like it is shocked.\n\nInclude around 10 clear visible details total. Use colorful objects with memorable placements and environmental storytelling strongly suggesting someone was getting picnic supplies ready inside the toy store before sunset. Warm glowing retro palette with golden sunlight patches, cozy shadows, clean readable silhouettes, simple shapes, minimal clutter, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "What animal was sneaking a sandwich from the picnic basket?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "A fox",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A raccoon",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A squirrel",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A rabbit",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What suggested someone was getting ready for a picnic?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "The stacked books on the shelf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The picnic basket, blanket, and thermos",
+          "is_correct": true
+        },
+        {
+          "answer_text": "The toy train near the window",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The glowing sunset outside",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the thermos on the table?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Blue",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was the goldfish doing in the bowl?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "Sleeping beside the rocks",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Looking at the raccoon",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Hiding behind a plant",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Jumping out of the water",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What object was leaning against the picnic basket?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A toy umbrella",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A toy kite",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A baseball bat",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A rolled poster",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

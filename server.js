@@ -14,7 +14,9 @@ const mimeTypes = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg'
 };
 
 function resolveRequestPath(urlPath) {
@@ -24,10 +26,6 @@ function resolveRequestPath(urlPath) {
 
   if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) {
     return null;
-  }
-
-  if (existsSync(filePath) && statSync(filePath).isDirectory()) {
-    filePath = join(filePath, 'index.html');
   }
 
   return filePath;
@@ -43,7 +41,36 @@ const server = createServer((req, res) => {
 
   const filePath = resolveRequestPath(req.url || '/');
 
-  if (!filePath || !existsSync(filePath) || !statSync(filePath).isFile()) {
+  if (!filePath || !existsSync(filePath)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+    return;
+  }
+
+  const stats = statSync(filePath);
+  if (stats.isDirectory()) {
+    if (!requestedPath.endsWith('/')) {
+      const query = (req.url || '').split('?')[1];
+      const redirectLocation = requestedPath + '/' + (query ? '?' + query : '');
+      res.writeHead(302, { Location: redirectLocation });
+      res.end();
+      return;
+    }
+
+    const indexFilePath = join(filePath, 'index.html');
+    if (existsSync(indexFilePath) && statSync(indexFilePath).isFile()) {
+      const contentType = mimeTypes['.html'];
+      res.writeHead(200, { 'Content-Type': contentType });
+      createReadStream(indexFilePath).pipe(res);
+      return;
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Not found');
+      return;
+    }
+  }
+
+  if (!stats.isFile()) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Not found');
     return;

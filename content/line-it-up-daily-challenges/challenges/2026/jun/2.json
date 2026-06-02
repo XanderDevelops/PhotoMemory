@@ -1,0 +1,32 @@
+{
+  "challenge_date": "2026-06-02",
+  "theme": "Animals by Typical Lifespan",
+  "order_description": "Small clue: some of these stick around much longer than others.",
+  "items": [
+    {
+      "name": "Mouse",
+      "correct_index": 0
+    },
+    {
+      "name": "Rabbit",
+      "correct_index": 1
+    },
+    {
+      "name": "Dog",
+      "correct_index": 2
+    },
+    {
+      "name": "Horse",
+      "correct_index": 3
+    },
+    {
+      "name": "Parrot",
+      "correct_index": 4
+    }
+  ],
+  "prompt": "Create one 1x5 horizontal strip of five separate square transparent-background game icons in this exact order: mouse, rabbit, dog, horse, parrot. Style matches a cute Line It Up object icon: rounded forms, clean dark ink outline, soft painterly shading, warm highlights, simple readable silhouette, centered subject, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos. Transparent background across all five square panels. All icons share identical lighting, line weight, rendering quality, and game asset polish.",
+  "image_path": "2026/jun/2.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\line-it-up-daily-challenges\\images\\2026\\jun\\2.png",
+  "created_at": "2026-06-02T21:57:33.398Z",
+  "source": "chatgpt-webview"
+}

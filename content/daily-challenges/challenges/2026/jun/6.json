@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-06-06",
+  "image_path": "2026/jun/6.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\jun\\6.png",
+  "created_at": "2026-05-28T04:53:10.256Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A quiet pet shop interior late at night in a flat vintage rubberhose cartoon style. Soft warm yellow light from hanging lamps glows against the dark blue night outside the front windows. Keep the composition extremely simple and easy to read with only 5 main focal groups: the washing sink counter, a pet supply shelf, a stack of dishes, a cozy pet bed corner, and a tiny baby dinosaur toy made to look alive.\n\nAt the sink: soapy bubbles overflow slightly from a metal basin filled with freshly washed pet bowls and colorful dishes. A striped dish towel hangs over the counter edge beside a dripping sponge. Nearby sits a half-open bottle of soap and a small bucket with water on the floor. A pair of wet rubber gloves has been left beside the sink, strongly suggesting someone was washing dishes moments ago.\n\nFunny unexpected detail: a tiny green baby dinosaur toy with shiny button eyes is standing upright near the bubbles pretending to roar at the soap foam like it is alive. Another playful detail: one bubble has landed perfectly on the dinosaur toy’s nose.\n\nInclude around 10 clear visible details total. Use colorful objects with memorable placements and environmental storytelling strongly suggesting late-night cleanup inside the pet shop after feeding animals. Warm cozy retro palette with deep blue nighttime tones outside, soft glowing interior lighting, clean readable silhouettes, simple shapes, minimal clutter, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "What toy was pretending to roar at the soap bubbles?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "A toy dragon",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A stuffed bear",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A baby dinosaur toy",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A rubber duck",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What suggests someone had been washing dishes recently?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "The moon outside the window",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The overflowing bubbles and wet gloves",
+          "is_correct": true
+        },
+        {
+          "answer_text": "The pet bed on the floor",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The fish tank on the shelf",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the bucket on the floor near the sink?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "Blue",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Purple",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "Where was the striped dish towel hanging?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "On the pet shelf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Over the counter edge near the sink",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Inside the pet bed",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Beside the window",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What landed on the dinosaur toy's nose?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A cracker crumb",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A soap bubble",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A tiny leaf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A fish sticker",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

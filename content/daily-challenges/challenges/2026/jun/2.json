@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-06-02",
+  "image_path": "2026/jun/2.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\jun\\2.png",
+  "created_at": "2026-05-28T04:42:32.077Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A bright sunny morning inside a cozy library reading area in a flat vintage rubberhose cartoon style, warm golden sunlight streaming through one large window onto a simple wooden reading table. Keep the composition extremely clean and easy to read with only 5 main focal groups: the reading table, a rolling library cart, a tall bookshelf corner, a sleeping orange cat, and the sunny window.\n\nOn the table: three colorful envelopes with stamps, an uncapped fountain pen beside an open handwritten letter, and a small blue teapot with steam rising. One envelope has fallen onto the floor near the chair. A tiny stack of books sits neatly at one corner of the table.\n\nFunny unexpected detail: the sleeping orange cat is curled up inside the lower shelf of the rolling library cart wearing tiny round glasses. Another playful detail: one envelope is slightly sticking out from inside a thick red book on the shelf as if someone hid it there.\n\nInclude around 10 clear visible details total. Use colorful objects with memorable placements and strong environmental storytelling suggesting someone was quietly writing letters all morning. Bright cheerful retro palette, warm sunlight patches on the floor, clean readable silhouettes, simple shapes, minimal clutter, no text labels, no logos, no UI.",
+  "questions": [
+    {
+      "question_text": "Where was the sleeping orange cat resting?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Under the table",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Inside the rolling library cart",
+          "is_correct": true
+        },
+        {
+          "answer_text": "On the window ledge",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Beside the chair",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was someone most likely doing at the table earlier?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "Wrapping gifts",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Drawing maps",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Writing letters",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Fixing books",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the teapot on the table?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Blue",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What unusual thing was the cat wearing?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "A scarf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A tiny hat",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A bow tie",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Round glasses",
+          "is_correct": true
+        }
+      ]
+    },
+    {
+      "question_text": "What suggests someone had been sitting at the table recently?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "The steaming teapot and open letter",
+          "is_correct": true
+        },
+        {
+          "answer_text": "The closed bookshelf",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The sunny weather outside",
+          "is_correct": false
+        },
+        {
+          "answer_text": "The empty window ledge",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

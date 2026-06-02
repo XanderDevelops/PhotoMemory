@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-05-31",
+  "image_path": "2026/may/31.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\may\\31.png",
+  "created_at": "2026-05-31T16:41:31.209Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A quiet school cafeteria during golden hour, flat vintage rubberhose colorful cartoony style, 1930s-inspired animation aesthetic, warm amber sunlight streaming through large cafeteria windows, clean composition, simple readable shapes, lots of open floor space and negative space, visually uncluttered and easy to understand at a glance.\n\nMain focal elements only: a long turquoise cafeteria table, a red popcorn machine on a serving counter, a friendly black-and-white cow, a yellow cafeteria tray, and a large window.\n\nVisible details (8–12 total): a small pile of freshly popped popcorn spilling from the machine onto the counter, a striped red-and-white popcorn box sitting on the yellow tray, a few popcorn kernels scattered on the floor leading away from the machine, the cow standing beside the table curiously looking at the popcorn, a blue lunchbox left on the table, a single orange chair pushed slightly away from the table, warm golden sunbeams across the floor, a small metal scoop resting beside the popcorn machine, and a colorful apple near the tray.\n\nEnvironmental storytelling: the popcorn machine is still warm and overflowing slightly, suggesting someone was just making popcorn and stepped away. The trail of kernels hints at recent activity.\n\nFunny unexpected details: the cow appears fascinated by the popcorn, and one popcorn box is balanced neatly on top of the cow’s head.\n\nColorful retro palette, warm lighting, memorable object placement, simple scene, clear silhouettes, no crowd, no text, no logos, no UI, highly readable Photo Memory challenge image.",
+  "questions": [
+    {
+      "question_text": "What animal was standing near the cafeteria table?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "A horse",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A cow",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A goat",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A sheep",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What color was the lunchbox on the table?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "Green",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Yellow",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Blue",
+          "is_correct": true
+        }
+      ]
+    },
+    {
+      "question_text": "What was balanced on top of the cow's head?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "A red apple",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A cafeteria tray",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A popcorn box",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A lunchbox",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was someone most likely doing shortly before the scene was shown?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "Decorating for a birthday party",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Making popcorn",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Painting the cafeteria",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Feeding farm animals",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What clue suggested recent activity near the popcorn machine?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A stack of books on the floor",
+          "is_correct": false
+        },
+        {
+          "answer_text": "An open window with curtains",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Popcorn overflowing and kernels leading away",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A backpack hanging from a chair",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}

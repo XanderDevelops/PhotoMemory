@@ -78,7 +78,7 @@ const HIGHSCORE_GROUPS = [
 ];
 const LEADERBOARD_PAGE_SIZE = 15;
 
-const ADMIN_TABS = new Set(['users', 'mail', 'notifications', 'daily', 'contextual']);
+const ADMIN_TABS = new Set(['users', 'mail', 'notifications', 'daily', 'line-it-up-daily', 'contextual']);
 
 const state = {
   session: null,
@@ -517,17 +517,20 @@ async function loadUserDashboard() {
 async function loadAdminDashboard() {
   if (!state.isAdmin) return;
 
-  const [userResult, dailyResult, contextualResult] = await Promise.all([
+  const [userResult, dailyResult, liuDailyResult, contextualResult] = await Promise.all([
     api('listUsers'),
     api('listDailyChallenges'),
+    api('listLineItUpChallenges'),
     api('listContextualLevels')
   ]);
 
   state.adminUsers = userResult.users || [];
   state.dailyChallenges = dailyResult.challenges || [];
+  state.lineItUpChallenges = liuDailyResult.challenges || [];
   state.contextualLevels = contextualResult.levels || [];
   renderUsers();
   renderDailyList();
+  renderLineItUpDailyList();
   renderContextualList();
 }
 
@@ -3061,6 +3064,42 @@ function attachEventListeners() {
     if (event.target.matches('[data-remove-answer]')) event.target.closest('.answer-block')?.remove();
   });
 
+  $('#new-liu-daily-btn').addEventListener('click', () => resetLiuDailyForm());
+  $('#liu-daily-form').addEventListener('submit', saveLineItUpDailyChallenge);
+  $('#liu-daily-image-file').addEventListener('change', (event) => previewImage(event.target.files[0], $('#liu-daily-image-preview')));
+  $('#liu-suggest-prompt-btn').addEventListener('click', suggestLiuPrompt);
+  $('#liu-daily-list').addEventListener('click', async (event) => {
+    const editId = event.target.dataset.liuEdit;
+    const deleteId = event.target.dataset.liuDelete;
+    
+    if (editId) {
+      const button = event.target;
+      setBusy(button, true, 'Loading...');
+      try {
+        const { challenge } = await api('getLineItUpChallenge', { id: editId });
+        resetLiuDailyForm(challenge);
+      } catch (error) {
+        toast(error.message, true);
+      } finally {
+        setBusy(button, false);
+      }
+    }
+    
+    if (deleteId && confirm('Delete this Line It Up challenge?')) {
+      const button = event.target;
+      setBusy(button, true, 'Deleting...');
+      try {
+        await api('deleteLineItUpChallenge', { id: deleteId });
+        toast('Challenge deleted.');
+        await loadAdminDashboard();
+      } catch (error) {
+        toast(error.message, true);
+      } finally {
+        setBusy(button, false);
+      }
+    }
+  });
+
   $('#new-contextual-btn').addEventListener('click', () => resetContextualForm());
   $('#add-variation-btn').addEventListener('click', () => addVariationBlock());
   $('#contextual-form').addEventListener('submit', saveContextualLevel);
@@ -3080,6 +3119,152 @@ function attachEventListeners() {
       previewImage(event.target.files[0], event.target.closest('.scene-item').querySelector('.scene-preview'));
     }
   });
+}
+
+function renderLineItUpDailyList() {
+  const listContainer = $('#liu-daily-list');
+  if (!listContainer) return;
+  listContainer.innerHTML = (state.lineItUpChallenges || []).map((challenge) => `
+    <div class="compact-item">
+      <div>
+        <strong>${escapeHtml(challenge.challenge_date)}</strong>
+        <small>Theme: ${escapeHtml(challenge.theme)}</small>
+        <small>${escapeHtml(challenge.order_description || '')}</small>
+      </div>
+      <div class="row-actions">
+        <button data-liu-edit="${challenge.id}">Edit</button>
+        <button data-liu-delete="${challenge.id}">Delete</button>
+      </div>
+    </div>
+  `).join('') || '<p class="muted">No Line It Up challenges yet.</p>';
+}
+
+function resetLiuDailyForm(challenge = null) {
+  $('#liu-daily-form').reset();
+  $('#liu-daily-id').value = challenge?.id || '';
+  $('#liu-daily-form-title').textContent = challenge ? `Edit Line It Up: ${challenge.challenge_date}` : 'New challenge';
+  $('#liu-daily-date').value = challenge?.challenge_date || new Date().toISOString().slice(0, 10);
+  $('#liu-daily-theme').value = challenge?.theme || '';
+  $('#liu-daily-desc').value = challenge?.order_description || '';
+  $('#liu-daily-prompt').value = challenge?.prompt || '';
+  $('#liu-daily-image-preview').innerHTML = challenge?.original_image_url
+    ? `<img src="${escapeHtml(challenge.original_image_url)}" alt="Daily challenge preview" />`
+    : 'No image selected';
+  
+  for (let i = 0; i < 5; i++) {
+    const itemName = challenge?.items?.[i]?.name || '';
+    $(`#liu-item-name-${i}`).value = itemName;
+  }
+  $('#liu-daily-image-file').required = !challenge;
+}
+
+async function sliceImageToUploadPayloads(file) {
+  if (!file) return [];
+  
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const height = img.height;
+        const width = img.width;
+        const sliceWidth = Math.round(width / 5);
+        const sliceSize = Math.min(height, sliceWidth);
+        
+        const slices = [];
+        const canvas = document.createElement('canvas');
+        canvas.width = sliceSize;
+        canvas.height = sliceSize;
+        const ctx = canvas.getContext('2d');
+        
+        for (let i = 0; i < 5; i++) {
+          ctx.clearRect(0, 0, sliceSize, sliceSize);
+          ctx.drawImage(img, i * sliceWidth, 0, sliceSize, sliceSize, 0, 0, sliceSize, sliceSize);
+          
+          const dataUrl = canvas.toDataURL(file.type || 'image/png');
+          slices.push({
+            name: `slice-${i}.png`,
+            type: file.type || 'image/png',
+            dataUrl: dataUrl
+          });
+        }
+        resolve(slices);
+      } catch (err) {
+        reject(new Error(`Failed to slice image: ${err.message}`));
+      }
+    };
+    img.onerror = () => reject(new Error('Failed to load image file.'));
+    
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveLineItUpDailyChallenge(event) {
+  event.preventDefault();
+  const button = event.submitter;
+  setBusy(button, true, 'Saving...');
+  
+  try {
+    const dateVal = $('#liu-daily-date').value;
+    const themeVal = $('#liu-daily-theme').value.trim();
+    const descVal = $('#liu-daily-desc').value.trim();
+    const promptVal = $('#liu-daily-prompt').value.trim();
+    const originalImageFile = await fileToUploadPayload($('#liu-daily-image-file').files[0]);
+    
+    let slices = [];
+    if ($('#liu-daily-image-file').files[0]) {
+      slices = await sliceImageToUploadPayloads($('#liu-daily-image-file').files[0]);
+    }
+    
+    const items = [];
+    for (let i = 0; i < 5; i++) {
+      const name = $(`#liu-item-name-${i}`).value.trim();
+      items.push({
+        name,
+        correct_index: i,
+        imageFile: slices[i] || null
+      });
+    }
+    
+    await api('saveLineItUpChallenge', {
+      challenge: {
+        id: $('#liu-daily-id').value || null,
+        challenge_date: dateVal,
+        theme: themeVal,
+        order_description: descVal,
+        prompt: promptVal,
+        originalImageFile,
+        items
+      }
+    });
+    
+    toast('Line It Up daily challenge saved.');
+    await loadAdminDashboard();
+    resetLiuDailyForm();
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+function suggestLiuPrompt() {
+  const suggestion = {
+    theme: 'Market Treats by Hidden Count',
+    desc: 'Small clue: count what quietly repeats.',
+    items: ['Lemon Tart', 'Berry Pie', 'Apple Basket', 'Orange Stand', 'Grape Bowl'],
+    prompt: 'Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos.'
+  };
+
+  $('#liu-daily-theme').value = suggestion.theme;
+  $('#liu-daily-desc').value = suggestion.desc;
+  $('#liu-daily-prompt').value = suggestion.prompt;
+  suggestion.items.forEach((item, index) => {
+    $(`#liu-item-name-${index}`).value = item;
+  });
+  toast('Prompt helper filled. Use the Electron admin Start auto flow for automated Line It Up generation.');
 }
 
 function previewImage(file, container) {
@@ -3118,6 +3303,7 @@ async function handleSession(session) {
 
   await refreshAll();
   resetDailyForm();
+  resetLiuDailyForm();
   resetContextualForm();
 }
 

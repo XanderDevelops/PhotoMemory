@@ -32,6 +32,10 @@
         <p class="muted">
           Send image and question prompts to the ChatGPT browser, save image downloads into the date folder, and store challenge JSON locally.
         </p>
+        <div class="mode-toggle" role="group" aria-label="Generator mode">
+          <button id="daily-mode-btn" class="active" type="button">Daily Challenge</button>
+          <button id="liu-mode-btn" type="button">Line It Up</button>
+        </div>
         <div class="field-row">
           <input id="images-root" readonly />
           <button id="pick-root-btn">Folder</button>
@@ -122,7 +126,6 @@
           src="https://chatgpt.com/"
           partition="persist:photo-memory-chatgpt"
           allowpopups
-          useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
         ></webview>
       </section>
     </aside>

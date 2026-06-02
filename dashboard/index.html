@@ -58,6 +58,7 @@
         <button data-admin-only data-tab="mail" hidden>Mail Studio</button>
         <button data-admin-only data-tab="notifications" hidden>Push Notifications</button>
         <button data-admin-only data-tab="daily" hidden>Daily Challenges</button>
+        <button data-admin-only data-tab="line-it-up-daily" hidden>Line It Up Daily</button>
         <button data-admin-only data-tab="contextual" hidden>Contextual Memory</button>
       </nav>
       <button id="logout-btn" class="ghost-button">Logout</button>
@@ -535,6 +536,50 @@
               </div>
               <div id="daily-questions"></div>
               <button type="submit">Save daily challenge</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="line-it-up-daily-panel" class="panel">
+        <div class="builder-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Line It Up Daily</p>
+                <h2>Challenges</h2>
+              </div>
+              <button id="new-liu-daily-btn" class="secondary-button">New challenge</button>
+            </div>
+            <div id="liu-daily-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="liu-daily-form" class="builder-form">
+              <input id="liu-daily-id" type="hidden" />
+              <h2 id="liu-daily-form-title">New challenge</h2>
+              <label>Date<input id="liu-daily-date" type="date" required /></label>
+              <label>Theme (e.g. Pop Culture Timeline)<input id="liu-daily-theme" type="text" required /></label>
+              <label>Order Description (e.g. Earliest to Latest)<input id="liu-daily-desc" type="text" placeholder="Explain the order logic" required /></label>
+              
+              <div class="liu-items-builder">
+                <h3>Items in Correct Order (1 to 5)</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                  <label style="margin: 0;">Item 1 Name<input id="liu-item-name-0" type="text" required /></label>
+                  <label style="margin: 0;">Item 2 Name<input id="liu-item-name-1" type="text" required /></label>
+                  <label style="margin: 0;">Item 3 Name<input id="liu-item-name-2" type="text" required /></label>
+                  <label style="margin: 0;">Item 4 Name<input id="liu-item-name-3" type="text" required /></label>
+                  <label style="margin: 0;">Item 5 Name<input id="liu-item-name-4" type="text" required /></label>
+                </div>
+              </div>
+
+              <label>AI Generation Prompt Helper (Optional)<textarea id="liu-daily-prompt" rows="3" placeholder="Enter ChatGPT image prompt style to document history"></textarea></label>
+              <button id="liu-suggest-prompt-btn" type="button" class="secondary-button" style="margin-bottom: 15px;">Suggest AI Prompt</button>
+
+              <label>Upload 1x5 Horizontal Grid Image (Transparent Background)<input id="liu-daily-image-file" type="file" accept="image/png,image/jpeg,image/webp" required /></label>
+              <div id="liu-daily-image-preview" class="image-preview">No image selected</div>
+              
+              <button type="submit">Save line it up daily challenge</button>
             </form>
           </section>
         </div>

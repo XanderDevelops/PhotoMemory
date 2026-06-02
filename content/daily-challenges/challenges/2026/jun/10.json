@@ -1,0 +1,120 @@
+{
+  "challenge_date": "2026-06-10",
+  "image_path": "2026/jun/10.png",
+  "image_file": "C:\\Users\\Daniel\\Documents\\GitHub\\PhotoMemory\\content\\daily-challenges\\images\\2026\\jun\\10.png",
+  "created_at": "2026-05-31T16:37:05.662Z",
+  "source": "chatgpt-webview",
+  "scene_prompt": "A spacious train station waiting area during golden hour, flat vintage rubberhose colorful cartoony style, 1930s-inspired animation aesthetic, warm orange sunlight pouring through tall station windows, simple readable shapes, clean composition with lots of empty floor space and strong negative space. Only five main focal groups: a long turquoise waiting bench, a stack of moving belongings, a white rabbit, a crow, and a large station window.\n\nOn the center-left sits a long turquoise bench. On the bench rests a bright yellow houseplant in a red pot and a folded purple moving blanket. Beside the",
+  "questions": [
+    {
+      "question_text": "What color was the waiting bench?",
+      "order_index": 0,
+      "answers": [
+        {
+          "answer_text": "Orange",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Turquoise",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Purple",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Red",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "Which animal was perched on the bench backrest?",
+      "order_index": 1,
+      "answers": [
+        {
+          "answer_text": "White rabbit",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Cat",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Crow",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Squirrel",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What object was visible inside the open moving box?",
+      "order_index": 2,
+      "answers": [
+        {
+          "answer_text": "A blue backpack",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A pink table lamp",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A yellow helmet",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A green watering can",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What was someone most likely preparing for based on the boxes, key, and belongings?",
+      "order_index": 3,
+      "answers": [
+        {
+          "answer_text": "Going fishing",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Starting a race",
+          "is_correct": false
+        },
+        {
+          "answer_text": "Moving into a new home",
+          "is_correct": true
+        },
+        {
+          "answer_text": "Opening a restaurant",
+          "is_correct": false
+        }
+      ]
+    },
+    {
+      "question_text": "What suggested that travel or transportation was involved in the scene?",
+      "order_index": 4,
+      "answers": [
+        {
+          "answer_text": "A bicycle leaning on a wall",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A red roller suitcase near the rabbit",
+          "is_correct": true
+        },
+        {
+          "answer_text": "A pile of beach towels",
+          "is_correct": false
+        },
+        {
+          "answer_text": "A shopping cart full of groceries",
+          "is_correct": false
+        }
+      ]
+    }
+  ]
+}
