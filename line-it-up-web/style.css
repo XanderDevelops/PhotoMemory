@@ -4,12 +4,12 @@
 
 :root {
     /* Color Palette */
-    --bg-paper: #FFFDF6;          /* Vintage warm paper background */
-    --border-dark: #1A1A1A;        /* Thick retro ink outlines */
-    --accent-red: #FF3E4D;         /* Cherry red comic pop */
-    --accent-blue: #2D46B9;        /* Royal retro indigo */
-    --accent-yellow: #FFC93C;      /* Warm golden yellow */
-    --accent-green: #12947F;       /* Emerald vintage teal */
+    --bg-paper: #fff7df;
+    --border-dark: #16110f;
+    --accent-red: #e82032;
+    --accent-blue: #2457c8;
+    --accent-yellow: #ffd33f;
+    --accent-green: #0aa67f;
     --shadow-solid: 4px 4px 0px var(--border-dark);
     --shadow-hover: 6px 6px 0px var(--border-dark);
     --shadow-active: 2px 2px 0px var(--border-dark);
@@ -51,15 +51,15 @@ body::before {
 /* Main Container Frame */
 #game-container {
     width: 100%;
-    max-width: 1280px;
-    min-height: calc(100vh - 20px);
+    max-width: none;
+    min-height: 100vh;
     background-color: var(--bg-paper);
-    border: 4px solid var(--border-dark);
-    box-shadow: 12px 12px 0px var(--border-dark);
-    border-radius: 16px;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
-    margin: 10px auto;
+    margin: 0;
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
@@ -174,8 +174,8 @@ body::before {
 }
 
 .avatar-sm {
-    width: 32px;
-    height: 32px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     border: 2px solid var(--border-dark);
     background-color: #E2ECF8;
@@ -202,6 +202,17 @@ body::before {
 
 .panel.active {
     display: flex;
+}
+
+#lobby-panel {
+    width: min(100%, 1420px);
+    margin: 0 auto;
+    padding-inline: clamp(22px, 5vw, 72px);
+    padding-top: 22px;
+}
+
+#gameplay-panel {
+    width: 100%;
 }
 
 @keyframes slideIn {
@@ -495,8 +506,8 @@ body::before {
     margin-top: 5px;
 }
 .avatar-option {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     border: 3px solid #DDD;
     border-radius: 50%;
     cursor: pointer;
@@ -711,7 +722,7 @@ body::before {
     display: flex;
     justify-content: center;
     align-items: stretch;
-    gap: 20px;
+    gap: 22px;
     width: 100%;
     perspective: 800px;
     padding: 10px 0;
@@ -727,8 +738,9 @@ body::before {
 .card-slot {
     flex: 1;
     width: 100%;
-    max-width: 200%;
-    aspect-ratio: 3/4;
+    max-width: 230px;
+    min-width: 0;
+    aspect-ratio: 4/5;
     background-color: var(--bg-paper);
     border: 4px solid var(--border-dark);
     border-radius: 12px;
@@ -738,7 +750,7 @@ body::before {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 6px;
+    padding: 10px 8px;
     box-sizing: border-box;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
@@ -758,14 +770,14 @@ body::before {
 
 .card-slot img {
     width: 100%;
-    max-height: 90%;
+    max-height: 82%;
     object-fit: contain;
     margin-top: 2px;
 }
 
 .card-slot span {
     font-family: var(--font-header);
-    font-size: 18px;
+    font-size: clamp(14px, 1.6vw, 22px);
     font-weight: 600;
     text-align: center;
     word-break: break-word;
@@ -1037,6 +1049,26 @@ body::before {
     box-shadow: 2px 2px 0px var(--border-dark);
 }
 
+.history-item.player-history-item {
+    font-size: 15px;
+    padding: 9px 12px;
+}
+
+.history-item.player-history-item.latest {
+    background-color: var(--accent-yellow);
+    border-width: 3px;
+    font-size: 18px;
+    padding: 12px 14px;
+    box-shadow: 4px 4px 0 var(--border-dark);
+}
+
+.history-item.opponent-history-item {
+    opacity: 0.82;
+    font-size: 11px;
+    padding: 5px 7px;
+    box-shadow: 1px 1px 0 var(--border-dark);
+}
+
 .history-item.all-correct {
     background-color: var(--accent-green);
     color: #FFFDF6;
@@ -1097,6 +1129,28 @@ body::before {
 .modal-overlay.active {
     display: flex;
     animation: zoomOverlay 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.game-message-box {
+    max-width: 420px;
+}
+
+#game-message-body,
+.order-logic-text {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.4;
+    color: #3c3028;
+}
+
+.order-logic-text {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    background: #fff0b8;
+    border: 3px solid var(--border-dark);
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 var(--border-dark);
+    font-weight: 700;
 }
 
 @keyframes zoomOverlay {
@@ -1221,7 +1275,7 @@ body::before {
 /* Small reveal cards */
 .reveal-card {
     flex: 1;
-    max-width: 200%;
+    max-width: 150px;
     border: 2px solid var(--border-dark);
     border-radius: 6px;
     background-color: var(--bg-paper);
@@ -1233,6 +1287,7 @@ body::before {
 }
 .reveal-card img {
     width: 100%;
+    min-height: 82px;
     object-fit: contain;
 }
 .reveal-card span {

@@ -1,5 +1,5 @@
 /**
- * Line It Up - Game Engine & WebRTC Multiplayer
+ * Line It Up - Game Engine & Multiplayer
  * Vintage Comic Style by Photo. Memory
  */
 
@@ -231,21 +231,148 @@ const CATEGORIES_DATA = {
     ]
 };
 
-// Gradient color codes for Bottle Mode test tubes
-const BOTTLE_COLORS = [
-    { id: 1, name: 'Cherry Red', gradient: 'linear-gradient(to top, #FF3E4D, #FFA4A4)' },
-    { id: 2, name: 'Royal Indigo', gradient: 'linear-gradient(to top, #2D46B9, #8C9EFF)' },
-    { id: 3, name: 'Golden Sun', gradient: 'linear-gradient(to top, #FFC93C, #FFE49F)' },
-    { id: 4, name: 'Vintage Emerald', gradient: 'linear-gradient(to top, #12947F, #8BEAD9)' },
-    { id: 5, name: 'Burnt Orange', gradient: 'linear-gradient(to top, #E04D01, #FF9F29)' }
+const FACT_PUZZLE_TEMPLATES = [
+    {
+        name: 'Space Distance',
+        orderLogic: 'Order logic: closest to farthest from the Sun.',
+        items: [
+            ['space', 'Mercury'],
+            ['space', 'Venus'],
+            ['space', 'Earth'],
+            ['space', 'Mars'],
+            ['space', 'Jupiter']
+        ]
+    },
+    {
+        name: 'Planet Size',
+        orderLogic: 'Order logic: smallest to largest planet/object by diameter.',
+        items: [
+            ['space', 'Pluto'],
+            ['space', 'Mercury'],
+            ['space', 'Mars'],
+            ['space', 'Earth'],
+            ['space', 'Jupiter']
+        ]
+    },
+    {
+        name: 'Animal Size',
+        orderLogic: 'Order logic: typical adult size, smallest to largest.',
+        items: [
+            ['animals', 'Hamster'],
+            ['animals', 'Rabbit'],
+            ['animals', 'Dog'],
+            ['animals', 'Bear'],
+            ['animals', 'Elephant']
+        ]
+    },
+    {
+        name: 'Animal Speed',
+        orderLogic: 'Order logic: typical movement speed, slowest to fastest.',
+        items: [
+            ['animals', 'Sloth'],
+            ['animals', 'Pig'],
+            ['animals', 'Rabbit'],
+            ['animals', 'Wolf'],
+            ['animals', 'Tiger']
+        ]
+    },
+    {
+        name: 'Food Sweetness',
+        orderLogic: 'Order logic: usually least sweet to sweetest food.',
+        items: [
+            ['foods', 'Broccoli'],
+            ['foods', 'Bread Loaf'],
+            ['foods', 'Apple'],
+            ['foods', 'Cookie'],
+            ['foods', 'Cupcake']
+        ]
+    },
+    {
+        name: 'Food Temperature',
+        orderLogic: 'Order logic: usually coldest to hottest when served.',
+        items: [
+            ['foods', 'Ice Cream'],
+            ['foods', 'Sushi'],
+            ['foods', 'Sandwich'],
+            ['foods', 'Pizza Slice'],
+            ['foods', 'Ramen']
+        ]
+    },
+    {
+        name: 'Object Weight',
+        orderLogic: 'Order logic: usual real-world weight, lightest to heaviest.',
+        items: [
+            ['objects', 'Pencil'],
+            ['objects', 'Key'],
+            ['objects', 'Coffee Mug'],
+            ['objects', 'Backpack'],
+            ['objects', 'Laptop']
+        ]
+    },
+    {
+        name: 'Object Size',
+        orderLogic: 'Order logic: usual physical size, smallest to largest.',
+        items: [
+            ['objects', 'Key'],
+            ['objects', 'Coffee Mug'],
+            ['objects', 'Backpack'],
+            ['objects', 'Skateboard'],
+            ['objects', 'Globe']
+        ]
+    },
+    {
+        name: 'Place Scale',
+        orderLogic: 'Order logic: typical place size, smallest to largest.',
+        items: [
+            ['places', 'Cafe'],
+            ['places', 'Bakery'],
+            ['places', 'Bookstore'],
+            ['places', 'Hospital'],
+            ['places', 'Airport']
+        ]
+    },
+    {
+        name: 'Building Height',
+        orderLogic: 'Order logic: typical building/structure height, shortest to tallest.',
+        items: [
+            ['places', 'Gazebo'],
+            ['places', 'House'],
+            ['places', 'Church'],
+            ['places', 'Lighthouse'],
+            ['places', 'Hotel']
+        ]
+    },
+    {
+        name: 'Water Animal Size',
+        orderLogic: 'Order logic: typical body size, smallest to largest.',
+        items: [
+            ['water_animals', 'Clownfish'],
+            ['water_animals', 'Crab'],
+            ['water_animals', 'Octopus'],
+            ['water_animals', 'Dolphin'],
+            ['water_animals', 'Whale']
+        ]
+    },
+    {
+        name: 'Visual Color Warmth',
+        orderLogic: 'Order logic: dominant image color, coolest-feeling to warmest-feeling.',
+        items: [
+            ['objects', 'Globe'],
+            ['objects', 'Laptop'],
+            ['objects', 'Coffee Mug'],
+            ['objects', 'Baseball Cap'],
+            ['objects', 'Gift Box']
+        ]
+    }
 ];
 
 class LineItUpGame {
     constructor() {
         this.gameState = {
             isPlaying: false,
-            mode: 'solo', // 'solo' | 'bottle' | 'multiplayer'
-            category: 'animals',
+            mode: 'solo',
+            category: 'mixed',
+            orderLogic: 'Use the images and real-world facts to infer the hidden order.',
             guessesRemaining: 8,
             guessesUsed: 0,
             boardState: [], // Array of 5 items
@@ -275,6 +402,8 @@ class LineItUpGame {
         this.opponentProfile = { username: 'Opponent', avatar: 'person_ponytail' };
         this.opponentSubmitted = false;
         this.opponentLastGuess = null;
+        this.myMultiplayerSolvedIn = null;
+        this.opponentSolvedIn = null;
 
         // Audio Elements
         this.musicAudio = new Audio('assets/audio/music-Memories in Black and White.mp3');
@@ -318,6 +447,10 @@ class LineItUpGame {
 
         this.bindDOMEvents();
         this.updateProfileUI();
+        const boardHint = document.querySelector('.board-hints');
+        if (boardHint) {
+            boardHint.innerText = 'Tap a card, then tap another to swap their positions. Submit when ready.';
+        }
         this.renderStatsLobby();
         this.renderLeaderboardLobby();
         this.setupAudioListeners();
@@ -361,6 +494,96 @@ class LineItUpGame {
         }
     }
 
+    showGameMessage(message, { title = 'Notice', confirm = false, okText = 'OK', cancelText = 'Cancel' } = {}) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('game-message-modal');
+            const titleEl = document.getElementById('game-message-title');
+            const bodyEl = document.getElementById('game-message-body');
+            const okBtn = document.getElementById('game-message-ok-btn');
+            const cancelBtn = document.getElementById('game-message-cancel-btn');
+
+            titleEl.innerText = title;
+            bodyEl.innerText = message;
+            okBtn.innerText = okText;
+            cancelBtn.innerText = cancelText;
+            cancelBtn.style.display = confirm ? 'block' : 'none';
+            modal.classList.add('active');
+
+            const cleanup = (value) => {
+                modal.classList.remove('active');
+                okBtn.removeEventListener('click', onOk);
+                cancelBtn.removeEventListener('click', onCancel);
+                resolve(value);
+            };
+            const onOk = () => cleanup(true);
+            const onCancel = () => cleanup(false);
+            okBtn.addEventListener('click', onOk);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    }
+
+    showGameNotice(message, title = 'Notice') {
+        return this.showGameMessage(message, { title });
+    }
+
+    showGameConfirm(message, title = 'Confirm') {
+        return this.showGameMessage(message, { title, confirm: true, okText: 'Yes', cancelText: 'No' });
+    }
+
+    getAllPlayableItems() {
+        return Object.entries(CATEGORIES_DATA).flatMap(([category, items]) =>
+            items.map(item => ({ ...item, category }))
+        );
+    }
+
+    itemImageSrc(item) {
+        if (item?.imageUrl) return item.imageUrl;
+        const category = item?.category || this.gameState.category || 'objects';
+        return `assets/icons/${category}/${item.icon}`;
+    }
+
+    findItem(category, name) {
+        const item = CATEGORIES_DATA[category]?.find(candidate => candidate.name === name);
+        return item ? { ...item, category } : null;
+    }
+
+    createPuzzleFromTemplate(template) {
+        const secret = template.items
+            .map(([category, name]) => this.findItem(category, name))
+            .filter(Boolean);
+        if (secret.length !== 5) return null;
+
+        return {
+            category: 'mixed',
+            secretSequence: secret,
+            orderLogic: template.orderLogic
+        };
+    }
+
+    createRandomFactPuzzle() {
+        const templates = [...FACT_PUZZLE_TEMPLATES].sort(() => Math.random() - 0.5);
+        for (const template of templates) {
+            const puzzle = this.createPuzzleFromTemplate(template);
+            if (puzzle) return puzzle;
+        }
+        return null;
+    }
+
+    shuffleForStart(secret) {
+        let shuffled = [...secret];
+        let attempts = 0;
+        while (attempts < 10) {
+            shuffled.sort(() => Math.random() - 0.5);
+            let correctCount = 0;
+            for (let i = 0; i < 5; i++) {
+                if (shuffled[i].name === secret[i].name) correctCount++;
+            }
+            if (correctCount < 5) break;
+            attempts++;
+        }
+        return shuffled;
+    }
+
     updateProfileUI() {
         document.getElementById('header-username').innerText = this.profile.username;
         document.getElementById('header-avatar').src = `assets/icons/people/${this.profile.avatar}.png`;
@@ -398,15 +621,15 @@ class LineItUpGame {
         });
 
         // Daily challenge premium unlock
-        document.getElementById('buy-daily-premium-btn').addEventListener('click', () => {
+        document.getElementById('buy-daily-premium-btn').addEventListener('click', async () => {
             this.playSFX('click');
             if (localStorage.getItem('lineitup_daily_premium') === 'true') {
-                alert("You already unlocked Premium Challenge Access! Enjoy replay access.");
+                await this.showGameNotice("You already unlocked Premium Challenge Access. Enjoy replay access.");
                 return;
             }
-            if (confirm("Simulate purchasing Premium Challenge Access for $4.99? This will permanently unlock all past challenges and remove replay cooldowns.")) {
+            if (await this.showGameConfirm("Unlock Premium Challenge Access for $4.99? This permanently unlocks past challenges and replay access.")) {
                 localStorage.setItem('lineitup_daily_premium', 'true');
-                alert("Mock purchase successful! Premium Challenge Access has been unlocked.");
+                await this.showGameNotice("Premium Challenge Access has been unlocked.");
                 this.updateDailyPremiumBanner();
                 if (this.selectedDailyDate && this.dailyChallengesMap[this.selectedDailyDate]) {
                     this.showDailyChallengeDetails(this.dailyChallengesMap[this.selectedDailyDate]);
@@ -417,14 +640,7 @@ class LineItUpGame {
         // Solo match trigger
         document.getElementById('start-solo-btn').addEventListener('click', () => {
             this.playSFX('click');
-            const categorySelect = document.getElementById('solo-category-select');
-            this.startNewGame('solo', categorySelect.value);
-        });
-
-        // Bottle mode trigger
-        document.getElementById('start-bottle-btn').addEventListener('click', () => {
-            this.playSFX('click');
-            this.startNewGame('bottle');
+            this.startNewGame('solo');
         });
 
         // Submit guess button
@@ -433,9 +649,9 @@ class LineItUpGame {
         });
 
         // Forfeit Button
-        document.getElementById('forfeit-btn').addEventListener('click', () => {
+        document.getElementById('forfeit-btn').addEventListener('click', async () => {
             this.playSFX('click');
-            if (confirm("Are you sure you want to forfeit this match? Your active progress will be lost.")) {
+            if (await this.showGameConfirm("Forfeit this match? Your active progress will be lost.")) {
                 this.handleForfeit();
             }
         });
@@ -444,11 +660,11 @@ class LineItUpGame {
         document.getElementById('iap-remove-ads-btn').addEventListener('click', () => {
             this.playSFX('click');
             if (Platform.isAdsRemoved()) {
-                alert("You are already a Premium user! Ads are removed.");
+                this.showGameNotice("You are already a Premium user. Ads are removed.");
                 return;
             }
             Platform.purchaseRemoveAds(() => {
-                alert("Thank you! Ads have been permanently removed from your device.");
+                this.showGameNotice("Thank you. Ads have been removed from your device.");
                 document.getElementById('iap-remove-ads-btn').style.display = 'none';
             });
         });
@@ -486,7 +702,7 @@ class LineItUpGame {
                 Platform.setUsername(this.profile.username);
                 this.updateProfileUI();
                 this.renderStatsLobby();
-                alert("Profile configuration saved successfully!");
+                this.showGameNotice("Profile saved.");
             }
         });
 
@@ -554,7 +770,7 @@ class LineItUpGame {
             if (targetPeerId) {
                 this.connectToHostPeer(targetPeerId);
             } else {
-                alert("Please enter a valid Host Peer ID!");
+                this.showGameNotice("Please enter a valid match code.");
             }
         });
 
@@ -564,7 +780,7 @@ class LineItUpGame {
             linkInput.select();
             linkInput.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(linkInput.value).then(() => {
-                alert("Direct invite link copied to clipboard!");
+                this.showGameNotice("Invite link copied.");
             });
         });
 
@@ -613,14 +829,14 @@ class LineItUpGame {
     // GAME CORE LOGIC
     // ==========================================================================
 
-    startNewGame(mode, category = 'animals') {
+    startNewGame(mode, category = 'mixed') {
         console.log(`[GameEngine] Starting Match in mode: ${mode}, category: ${category}`);
         
         // Setup initial structure
         this.gameState.isPlaying = true;
         this.gameState.mode = mode;
         this.gameState.category = category;
-        this.gameState.guessesRemaining = 8;
+        this.gameState.guessesRemaining = mode === 'multiplayer' ? Infinity : 8;
         this.gameState.guessesUsed = 0;
         this.gameState.guessHistory = [];
         this.gameState.opponentGuessHistory = [];
@@ -628,29 +844,26 @@ class LineItUpGame {
         this.gameState.selectedSlotIndex = null;
         this.gameState.matchStartTime = Date.now();
         this.opponentSubmitted = false;
+        this.opponentLastGuess = null;
+        this.myMultiplayerSolvedIn = null;
+        this.opponentSolvedIn = null;
 
         // Clear display containers
         document.getElementById('player-history-list').innerHTML = '';
         document.getElementById('opponent-history-list').innerHTML = '';
-        document.getElementById('guesses-remaining').innerText = '8';
+        document.getElementById('guesses-remaining').innerText = mode === 'multiplayer' ? '∞' : '8';
         document.getElementById('waiting-overlay-bar').style.display = 'none';
         document.getElementById('submit-guess-btn').disabled = false;
 
         if (mode === 'solo' || mode === 'multiplayer') {
             document.getElementById('gameplay-mode-label').innerText = mode === 'solo' ? 'Solo Mode' : 'P2P Online';
-            document.getElementById('gameplay-topic-label').innerText = `Category: ${category.replace('_', ' ').toUpperCase()}`;
+            document.getElementById('gameplay-topic-label').innerText = 'Find the hidden order';
             document.getElementById('opponent-history-wrapper').style.display = mode === 'multiplayer' ? 'flex' : 'none';
             document.getElementById('multiplayer-vs-pill').style.display = mode === 'multiplayer' ? 'flex' : 'none';
             
             if (mode === 'solo') {
-                this.generateSoloPuzzle(category);
+                this.generateMixedPuzzle();
             }
-        } else if (mode === 'bottle') {
-            document.getElementById('gameplay-mode-label').innerText = 'Bottle Mode';
-            document.getElementById('gameplay-topic-label').innerText = 'Organize Fluid Gradients';
-            document.getElementById('opponent-history-wrapper').style.display = 'none';
-            document.getElementById('multiplayer-vs-pill').style.display = 'none';
-            this.generateBottlePuzzle();
         }
 
         // Transitions screen
@@ -663,104 +876,34 @@ class LineItUpGame {
             this.musicAudio.play().catch(e => {});
         }
 
-        // Setup timer countdown for multiplayer matches
         this.setupGameplayTimer();
     }
 
     setupGameplayTimer(resume = false) {
         clearInterval(this.timerInterval);
-        
-        if (this.gameState.mode === 'multiplayer') {
-            document.getElementById('gameplay-timer-container').style.display = 'block';
-            if (!resume) {
-                this.gameState.timer = 30;
-            }
-            document.getElementById('gameplay-timer').innerText = this.gameState.timer;
-            
-            this.timerInterval = setInterval(() => {
-                this.gameState.timer--;
-                document.getElementById('gameplay-timer').innerText = this.gameState.timer;
-                
-                // Tick audio feedback in the last 5 seconds
-                if (this.gameState.timer <= 5 && this.gameState.timer > 0) {
-                    this.playSFX('tick');
-                }
-                
-                if (this.gameState.timer <= 0) {
-                    clearInterval(this.timerInterval);
-                    console.log("[GameEngine] Timer expired! Auto-submitting current layout.");
-                    this.submitActiveGuess();
-                }
-            }, 1000);
-        } else {
-            // Count up timer in solo just for aesthetics
-            document.getElementById('gameplay-timer-container').style.display = 'block';
-            if (!resume) {
-                this.gameState.timer = 0;
-            }
-            document.getElementById('gameplay-timer').innerText = this.gameState.timer;
-            this.timerInterval = setInterval(() => {
-                this.gameState.timer++;
-                document.getElementById('gameplay-timer').innerText = this.gameState.timer;
-            }, 1000);
+
+        document.getElementById('gameplay-timer-container').style.display = 'block';
+        if (!resume) {
+            this.gameState.timer = 0;
         }
+        document.getElementById('gameplay-timer').innerText = this.gameState.timer;
+        this.timerInterval = setInterval(() => {
+            this.gameState.timer++;
+            document.getElementById('gameplay-timer').innerText = this.gameState.timer;
+        }, 1000);
     }
 
-    // Draw random category items, shuffle starting layout
-    generateSoloPuzzle(category) {
-        const dataset = CATEGORIES_DATA[category];
-        if (!dataset || dataset.length < 5) return;
+    // Draw mixed items, sort them by hidden order logic, then shuffle starting layout.
+    generateMixedPuzzle() {
+        const puzzle = this.createRandomFactPuzzle();
+        if (!puzzle) return;
+        const secret = puzzle.secretSequence;
 
-        // Pick 5 unique random items
-        const pool = [...dataset];
-        const selected = [];
-        for (let i = 0; i < 5; i++) {
-            const randIdx = Math.floor(Math.random() * pool.length);
-            selected.push(pool.splice(randIdx, 1)[0]);
-        }
-
-        this.gameState.secretSequence = [...selected];
+        this.gameState.category = 'mixed';
+        this.gameState.secretSequence = [...secret];
+        this.gameState.orderLogic = puzzle.orderLogic;
         
-        // Shuffle for initial starting position
-        let shuffled = [...selected];
-        let attempts = 0;
-        while (attempts < 10) {
-            shuffled.sort(() => Math.random() - 0.5);
-            // Count correct indices
-            let correctCount = 0;
-            for (let i = 0; i < 5; i++) {
-                if (shuffled[i].name === this.gameState.secretSequence[i].name) correctCount++;
-            }
-            // Ensure not 100% correct
-            if (correctCount < 5) break;
-            attempts++;
-        }
-
-        this.gameState.boardState = shuffled;
-        this.renderBoardSlots();
-    }
-
-    // Generate 5 distinct color test tubes
-    generateBottlePuzzle() {
-        const colors = [...BOTTLE_COLORS];
-        
-        // Target Secret Sequence
-        this.gameState.secretSequence = [...colors];
-
-        // Shuffle starting state
-        let shuffled = [...colors];
-        let attempts = 0;
-        while (attempts < 10) {
-            shuffled.sort(() => Math.random() - 0.5);
-            let correctCount = 0;
-            for (let i = 0; i < 5; i++) {
-                if (shuffled[i].id === this.gameState.secretSequence[i].id) correctCount++;
-            }
-            if (correctCount < 5) break;
-            attempts++;
-        }
-
-        this.gameState.boardState = shuffled;
+        this.gameState.boardState = this.shuffleForStart(secret);
         this.renderBoardSlots();
     }
 
@@ -772,69 +915,16 @@ class LineItUpGame {
         this.gameState.boardState.forEach((item, index) => {
             const isSelected = this.gameState.selectedSlotIndex === index;
             
-            if (this.gameState.mode === 'solo' || this.gameState.mode === 'multiplayer' || this.gameState.mode === 'daily') {
-                // Render Standard Card
-                const card = document.createElement('div');
-                card.className = `card-slot ${isSelected ? 'selected' : ''}`;
-                const imgSrc = this.gameState.mode === 'daily' ? item.imageUrl : `assets/icons/${this.gameState.category}/${item.icon}`;
-                card.innerHTML = `
-                    <div class="card-tag">#${index + 1}</div>
-                    <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${item.name}'">
-                    <span>${item.name}</span>
-                `;
-                card.addEventListener('click', () => this.handleSlotClick(index));
-                slotsContainer.appendChild(card);
-            } else if (this.gameState.mode === 'bottle') {
-                // Render Realistic Potion Bottle Sort Style
-                const container = document.createElement('div');
-                container.className = `bottle-container ${isSelected ? 'selected' : ''}`;
-                
-                const bottle = document.createElement('div');
-                bottle.className = 'glass-bottle';
-                
-                const lip = document.createElement('div');
-                lip.className = 'bottle-lip';
-                
-                const neck = document.createElement('div');
-                neck.className = 'bottle-neck';
-                
-                const body = document.createElement('div');
-                body.className = 'bottle-body';
-                
-                const shine = document.createElement('div');
-                shine.className = 'glass-shine';
-                
-                const liquid = document.createElement('div');
-                liquid.className = 'liquid';
-                liquid.style.background = item.gradient;
-                
-                // Spawn 10 dynamic bubbles inside the bubbles container
-                const bubbles = document.createElement('div');
-                bubbles.className = 'bubble-fx';
-                for (let b = 0; b < 10; b++) {
-                    const bubble = document.createElement('span');
-                    bubble.className = 'micro-bubble';
-                    // Spread bubbles horizontally and stagger delays
-                    bubble.style.left = `${15 + Math.random() * 70}%`;
-                    bubble.style.animationDelay = `${Math.random() * 3}s`;
-                    bubble.style.animationDuration = `${2.5 + Math.random() * 2}s`;
-                    bubble.style.transform = `scale(${0.5 + Math.random() * 0.7})`;
-                    bubbles.appendChild(bubble);
-                }
-                
-                body.appendChild(shine);
-                body.appendChild(liquid);
-                body.appendChild(bubbles);
-                
-                bottle.appendChild(lip);
-                bottle.appendChild(neck);
-                bottle.appendChild(body);
-                
-                container.appendChild(bottle);
-                
-                container.addEventListener('click', () => this.handleSlotClick(index));
-                slotsContainer.appendChild(container);
-            }
+            const card = document.createElement('div');
+            card.className = `card-slot ${isSelected ? 'selected' : ''}`;
+            const imgSrc = this.itemImageSrc(item);
+            card.innerHTML = `
+                <div class="card-tag">#${index + 1}</div>
+                <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">
+                <span>${item.name}</span>
+            `;
+            card.addEventListener('click', () => this.handleSlotClick(index));
+            slotsContainer.appendChild(card);
         });
     }
 
@@ -846,20 +936,12 @@ class LineItUpGame {
             // Select slot
             this.gameState.selectedSlotIndex = index;
             this.renderBoardSlots();
-            if (this.gameState.mode === 'bottle') {
-                this.playSFX('bubbleClick');
-            } else {
-                this.playSFX('click');
-            }
+            this.playSFX('click');
         } else if (this.gameState.selectedSlotIndex === index) {
             // Deselect
             this.gameState.selectedSlotIndex = null;
             this.renderBoardSlots();
-            if (this.gameState.mode === 'bottle') {
-                this.playSFX('bubbleClick');
-            } else {
-                this.playSFX('click');
-            }
+            this.playSFX('click');
         } else {
             // Swap items with smooth sliding animation!
             const oldIdx = this.gameState.selectedSlotIndex;
@@ -919,19 +1001,15 @@ class LineItUpGame {
 
         let correctCount = 0;
         this.gameState.boardState.forEach((item, index) => {
-            if (this.gameState.mode === 'solo' || this.gameState.mode === 'multiplayer' || this.gameState.mode === 'daily') {
-                if (item.name === this.gameState.secretSequence[index].name) {
-                    correctCount++;
-                }
-            } else if (this.gameState.mode === 'bottle') {
-                if (item.id === this.gameState.secretSequence[index].id) {
-                    correctCount++;
-                }
+            if (item.name === this.gameState.secretSequence[index].name) {
+                correctCount++;
             }
         });
 
         this.gameState.guessesUsed++;
-        this.gameState.guessesRemaining--;
+        if (this.gameState.mode !== 'multiplayer') {
+            this.gameState.guessesRemaining--;
+        }
 
         const activeGuessInfo = {
             layout: [...this.gameState.boardState],
@@ -944,7 +1022,6 @@ class LineItUpGame {
         this.appendHistoryItem('player-history-list', this.gameState.guessHistory.length, correctCount);
 
         if (this.gameState.mode === 'multiplayer') {
-            // Multiplayer Sync logic
             this.handleMultiplayerGuessSubmit(activeGuessInfo);
             return;
         }
@@ -980,9 +1057,11 @@ class LineItUpGame {
             container.removeChild(emptyPlaceholder);
         }
 
+        container.querySelectorAll('.history-item.latest').forEach(node => node.classList.remove('latest'));
         const isPerfect = correctCount === 5;
+        const isOpponent = containerId.includes('opponent');
         const item = document.createElement('div');
-        item.className = `history-item ${isPerfect ? 'all-correct' : ''}`;
+        item.className = `history-item ${isOpponent ? 'opponent-history-item' : 'player-history-item latest'} ${isPerfect ? 'all-correct' : ''}`;
         
         item.innerHTML = `
             <span>Round ${roundNumber} Layout</span>
@@ -1006,7 +1085,7 @@ class LineItUpGame {
                 this.gameState.rewardedAdUsed = true;
                 
                 document.getElementById('guesses-remaining').innerText = this.gameState.guessesRemaining;
-                alert("Granted! You received 2 extra guesses to solve the puzzle.");
+                this.showGameNotice("You received 2 extra guesses to solve the puzzle.");
                 
                 // Restart timer countdown
                 this.setupGameplayTimer(true);
@@ -1064,12 +1143,12 @@ class LineItUpGame {
     renderSecretRevealModal() {
         const header = document.getElementById('result-reveal-header');
         if (header) {
-            if (this.gameState.mode === 'solo' || this.gameState.mode === 'multiplayer' || this.gameState.mode === 'daily') {
-                const categoryFormatted = this.gameState.mode === 'daily' ? 'DAILY' : this.gameState.category.replace('_', ' ').toUpperCase();
-                header.innerText = `Secret Sequence (Category: ${categoryFormatted})`;
-            } else {
-                header.innerText = `Secret Sequence (Color Bottles)`;
-            }
+            header.innerText = 'Correct Order';
+        }
+
+        const logic = document.getElementById('result-order-logic');
+        if (logic) {
+            logic.innerText = this.gameState.orderLogic || 'Order logic: find the hidden order from the card names and images.';
         }
 
         const container = document.getElementById('secret-reveal-container');
@@ -1079,18 +1158,11 @@ class LineItUpGame {
             const card = document.createElement('div');
             card.className = 'reveal-card';
             
-            if (this.gameState.mode === 'solo' || this.gameState.mode === 'multiplayer' || this.gameState.mode === 'daily') {
-                const imgSrc = this.gameState.mode === 'daily' ? item.imageUrl : `assets/icons/${this.gameState.category}/${item.icon}`;
-                card.innerHTML = `
-                    <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${item.name}'">
-                    <span>${item.name}</span>
-                `;
-            } else if (this.gameState.mode === 'bottle') {
-                card.innerHTML = `
-                    <div style="width: 36px; height: 75px; border: 2.5px solid var(--border-dark); border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; background: ${item.gradient}; box-shadow: inset -4px 0 0 rgba(255,255,255,0.3);"></div>
-                    <span>${item.name}</span>
-                `;
-            }
+            const imgSrc = this.itemImageSrc(item);
+            card.innerHTML = `
+                <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">
+                <span>${item.name}</span>
+            `;
             container.appendChild(card);
         });
     }
@@ -1144,7 +1216,7 @@ class LineItUpGame {
                 this.gameState.lobbyId = id;
                 document.getElementById('host-peer-id-text').innerText = id;
                 
-                // Formulate Direct WebRTC Join Invite link
+                // Formulate join invite link
                 const inviteUrl = window.location.origin + window.location.pathname + "?join=" + id;
                 document.getElementById('invite-link-input').value = inviteUrl;
             });
@@ -1157,13 +1229,13 @@ class LineItUpGame {
 
             this.peer.on('error', (err) => {
                 console.error("[P2P] PeerJS general error:", err);
-                alert(`P2P Network error: ${err.message}`);
+                this.showGameNotice(`Network error: ${err.message}`);
                 this.closeP2PHostLobby();
             });
 
         } catch (e) {
             console.error("[P2P] Failed to host:", e);
-            alert("Error establishing P2P peer lobby.");
+            this.showGameNotice("Could not create the match lobby.");
             this.closeP2PHostLobby();
         }
     }
@@ -1192,7 +1264,7 @@ class LineItUpGame {
 
             this.peer.on('error', (err) => {
                 console.error("[P2P] Connection peer error:", err);
-                alert(`Failed to connect to lobby peer. Please verify ID is correct.`);
+                this.showGameNotice("Could not connect. Please check the match code.");
                 joinBtn.disabled = false;
                 joinBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Join';
             });
@@ -1206,7 +1278,7 @@ class LineItUpGame {
 
     setupDataChannelListeners() {
         this.conn.on('open', () => {
-            console.log("[P2P] Peer WebRTC connection fully opened and ready!");
+            console.log("[P2P] Peer connection fully opened and ready!");
             this.peerConnected = true;
             
             // Hide host modal if active
@@ -1249,7 +1321,7 @@ class LineItUpGame {
         }
     }
 
-    handleP2PIncomingMessage(data) {
+    async handleP2PIncomingMessage(data) {
         switch (data.type) {
             case 'handshake':
                 this.opponentProfile.username = data.username || 'Opponent';
@@ -1272,32 +1344,31 @@ class LineItUpGame {
                 // Client starts game using details generated by Host
                 this.gameState.secretSequence = data.secretSequence;
                 this.gameState.boardState = data.boardState;
-                this.gameState.category = data.category;
+                this.gameState.category = data.category || 'mixed';
+                this.gameState.orderLogic = data.orderLogic || 'Order logic: solve the hidden fact-based order.';
                 
-                this.startNewGame('multiplayer', data.category);
+                this.startNewGame('multiplayer', this.gameState.category);
                 this.renderBoardSlots();
                 break;
 
             case 'submit_guess':
-                // Remote opponent submitted their guess
-                this.opponentSubmitted = true;
                 this.opponentLastGuess = data;
                 
-                // Append their records instantly in Opponent scroll
                 this.appendHistoryItem('opponent-history-list', data.round, data.correct);
-                
-                // Check if user has also submitted, so we can advance
-                this.evaluateMultiplayerRoundSync();
+                if (data.solved) {
+                    this.opponentSolvedIn = data.round;
+                    this.resolveMultiplayerResultIfReady();
+                }
                 break;
 
             case 'forfeit':
-                alert(`${this.opponentProfile.username} has forfeited the match! You win by default.`);
-                this.finalizeMatch(true);
+                this.showGameNotice(`${this.opponentProfile.username} forfeited the match. You win.`);
+                this.finalizeMultiplayerMatch('win', `${this.opponentProfile.username} forfeited the match.`);
                 break;
 
             case 'rematch_offer':
                 this.playSFX('win');
-                if (confirm(`${this.opponentProfile.username} offers a rematch! Do you accept?`)) {
+                if (await this.showGameConfirm(`${this.opponentProfile.username} offers a rematch. Accept?`)) {
                     this.sendP2PMessage({ type: 'rematch_accept' });
                     // Host sets up another game
                     if (this.isHost) {
@@ -1308,144 +1379,129 @@ class LineItUpGame {
 
             case 'rematch_accept':
                 console.log("[P2P] Rematch accepted!");
+                if (this.isHost) {
+                    this.setupAndStartHostMultiplayer();
+                }
                 break;
         }
     }
 
-    // Host picks random category and initial boards, shares it P2P
+    // Host creates a mixed-card puzzle and shares it with the other player.
     setupAndStartHostMultiplayer() {
-        const categories = ['animals', 'foods', 'objects', 'people', 'places', 'space', 'water_animals'];
-        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-        
-        // Build cards
-        const dataset = CATEGORIES_DATA[randomCategory];
-        const pool = [...dataset];
-        const secret = [];
-        for (let i = 0; i < 5; i++) {
-            const randIdx = Math.floor(Math.random() * pool.length);
-            secret.push(pool.splice(randIdx, 1)[0]);
-        }
-
-        // Shuffle starting boards
-        let shuffled = [...secret];
-        let attempts = 0;
-        while (attempts < 10) {
-            shuffled.sort(() => Math.random() - 0.5);
-            let correct = 0;
-            for (let i = 0; i < 5; i++) {
-                if (shuffled[i].name === secret[i].name) correct++;
-            }
-            if (correct < 5) break;
-            attempts++;
-        }
+        const puzzle = this.createRandomFactPuzzle();
+        if (!puzzle) return;
+        const secret = puzzle.secretSequence;
+        const shuffled = this.shuffleForStart(secret);
 
         this.gameState.secretSequence = secret;
         this.gameState.boardState = shuffled;
-        this.gameState.category = randomCategory;
+        this.gameState.category = 'mixed';
+        this.gameState.orderLogic = puzzle.orderLogic;
 
         // Broadcast starting packet to client
         this.sendP2PMessage({
             type: 'start_match',
-            category: randomCategory,
+            category: 'mixed',
+            orderLogic: this.gameState.orderLogic,
             secretSequence: secret,
             boardState: shuffled
         });
 
-        this.startNewGame('multiplayer', randomCategory);
+        this.startNewGame('multiplayer', 'mixed');
         this.renderBoardSlots();
     }
 
     handleMultiplayerGuessSubmit(guessInfo) {
-        // Freeze GUI submit until opponent catches up
-        document.getElementById('submit-guess-btn').disabled = true;
-        document.getElementById('waiting-overlay-bar').style.display = 'block';
+        if (this.myMultiplayerSolvedIn) return;
 
-        // Clear turn countdown timer interval
-        clearInterval(this.timerInterval);
+        if (guessInfo.correct === 5) {
+            this.myMultiplayerSolvedIn = this.gameState.guessHistory.length;
+            document.getElementById('submit-guess-btn').disabled = true;
+            document.getElementById('waiting-overlay-bar').style.display = 'block';
+            document.getElementById('waiting-overlay-bar').innerText = 'Solved! Waiting for the other player...';
+        }
 
-        // Share guess state with Peer
         this.sendP2PMessage({
             type: 'submit_guess',
             round: this.gameState.guessHistory.length,
-            correct: guessInfo.correct
+            correct: guessInfo.correct,
+            solved: guessInfo.correct === 5
         });
 
-        // Run evaluation checks
-        this.evaluateMultiplayerRoundSync();
+        if (guessInfo.correct === 5) {
+            this.resolveMultiplayerResultIfReady();
+        } else {
+            document.getElementById('guesses-remaining').innerText = '∞';
+            this.playSFX('click');
+        }
     }
 
-    evaluateMultiplayerRoundSync() {
-        const myLastGuess = this.gameState.guessHistory[this.gameState.guessHistory.length - 1];
-        
-        // We need both players to have submitted their guesses for the current round
-        if (!myLastGuess || !this.opponentSubmitted) {
-            console.log("[P2P] Waiting for opponent guess submission...");
+    resolveMultiplayerResultIfReady() {
+        if (!this.myMultiplayerSolvedIn && !this.opponentSolvedIn) {
             return;
         }
 
-        // Both players are now synced for this round
-        console.log("[P2P] Evaluating round results simultaneously!");
-        
-        // Hide wait spinner, enable buttons
-        document.getElementById('waiting-overlay-bar').style.display = 'none';
-        document.getElementById('submit-guess-btn').disabled = false;
-        document.getElementById('guesses-remaining').innerText = this.gameState.guessesRemaining;
-
-        const myCorrect = myLastGuess.correct;
-        const oppCorrect = this.opponentLastGuess.correct;
-
-        // Reset sync controls
-        this.opponentSubmitted = false;
-
-        // Check if either player got 5/5
-        const myWin = myCorrect === 5;
-        const oppWin = oppCorrect === 5;
-
-        if (myWin && oppWin) {
-            // Both solved - Tie match
-            this.gameState.isPlaying = false;
-            clearInterval(this.timerInterval);
-            this.musicAudio.pause();
-            this.playSFX('win');
-            
-            document.getElementById('result-title').innerText = "TIE MATCH!";
-            document.getElementById('result-title').style.color = 'var(--accent-yellow)';
-            document.getElementById('result-description').innerText = `Amazing! Both you and ${this.opponentProfile.username} cracked the pattern at the exact same round!`;
-            
-            this.saveSolveStats(this.gameState.guessesUsed, true);
-            this.renderSecretRevealModal();
-            document.getElementById('match-end-modal').classList.add('active');
-        } else if (myWin) {
-            // I win
-            this.finalizeMatch(true);
-            // Record Ranked win in stats
-            let rankedWins = parseInt(localStorage.getItem('lineitup_wins') || '0');
-            localStorage.setItem('lineitup_wins', rankedWins + 1);
-        } else if (oppWin) {
-            // Opponent wins
-            this.finalizeMatch(false);
-        } else if (this.gameState.guessesRemaining <= 0) {
-            // Out of guesses, tie / lose
-            this.finalizeMatch(false);
-        } else {
-            // Continue to next round, restart turn timer
-            this.playSFX('click');
-            this.setupGameplayTimer();
+        if (this.myMultiplayerSolvedIn && !this.opponentSolvedIn) {
+            return;
         }
+
+        if (!this.myMultiplayerSolvedIn && this.opponentSolvedIn) {
+            document.getElementById('waiting-overlay-bar').style.display = 'block';
+            document.getElementById('waiting-overlay-bar').innerText = `${this.opponentProfile.username} solved in ${this.opponentSolvedIn}. Keep going to beat or tie it.`;
+            return;
+        }
+
+        if (this.myMultiplayerSolvedIn < this.opponentSolvedIn) {
+            this.finalizeMultiplayerMatch('win', `You solved it in ${this.myMultiplayerSolvedIn} guesses. ${this.opponentProfile.username} solved it in ${this.opponentSolvedIn}.`);
+            const rankedWins = parseInt(localStorage.getItem('lineitup_wins') || '0');
+            localStorage.setItem('lineitup_wins', rankedWins + 1);
+        } else if (this.myMultiplayerSolvedIn > this.opponentSolvedIn) {
+            this.finalizeMultiplayerMatch('loss', `${this.opponentProfile.username} solved it in ${this.opponentSolvedIn} guesses. You solved it in ${this.myMultiplayerSolvedIn}.`);
+        } else {
+            this.finalizeMultiplayerMatch('tie', `Both players solved it in ${this.myMultiplayerSolvedIn} guesses.`);
+        }
+    }
+
+    finalizeMultiplayerMatch(result, description) {
+        this.gameState.isPlaying = false;
+        clearInterval(this.timerInterval);
+        this.musicAudio.pause();
+        document.getElementById('waiting-overlay-bar').style.display = 'none';
+
+        if (result === 'win') {
+            this.playSFX('win');
+            document.getElementById('result-title').innerText = 'VICTORY!';
+            document.getElementById('result-title').style.color = 'var(--accent-green)';
+            this.saveSolveStats(this.myMultiplayerSolvedIn || this.gameState.guessesUsed, true);
+        } else if (result === 'tie') {
+            this.playSFX('win');
+            document.getElementById('result-title').innerText = 'TIE MATCH!';
+            document.getElementById('result-title').style.color = 'var(--accent-yellow)';
+            this.saveSolveStats(this.myMultiplayerSolvedIn || this.gameState.guessesUsed, true);
+        } else {
+            this.playSFX('loss');
+            document.getElementById('result-title').innerText = 'DEFEAT!';
+            document.getElementById('result-title').style.color = 'var(--accent-red)';
+            this.saveSolveStats(this.gameState.guessesUsed, false);
+        }
+
+        document.getElementById('result-description').innerText = description;
+        this.renderSecretRevealModal();
+        document.getElementById('match-end-modal').classList.add('active');
     }
 
     offerMultiplayerRematch() {
         console.log("[P2P] Offering rematch to opponent...");
         this.sendP2PMessage({ type: 'rematch_offer' });
-        alert("Rematch offer sent! Waiting for opponent response...");
+        this.showGameNotice("Rematch offer sent. Waiting for the other player.");
     }
 
     handlePeerDisconnected() {
         if (this.gameState.isPlaying) {
-            alert("The connection to the other player was lost! Match ended.");
+            this.showGameNotice("The connection to the other player was lost. Match ended.");
             this.handleForfeit();
         } else {
-            alert("Disconnected from P2P Lobby.");
+            this.showGameNotice("Disconnected from match lobby.");
         }
         this.closeP2PConnection();
     }
@@ -1733,8 +1789,8 @@ class LineItUpGame {
         const formattedDate = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         
         document.getElementById('selected-day-title').innerText = formattedDate;
-        document.getElementById('selected-day-theme').innerText = `Theme: ${challenge.theme}`;
-        document.getElementById('selected-day-desc').innerText = challenge.order_description || "Arrange the square sliced images in the correct hidden logical order!";
+        document.getElementById('selected-day-theme').innerText = challenge.theme;
+        document.getElementById('selected-day-desc').innerText = 'Find the hidden order.';
         
         const completedList = JSON.parse(localStorage.getItem('lineitup_daily_completed') || '[]');
         const isCompleted = completedList.includes(challenge.challenge_date);
@@ -1876,14 +1932,15 @@ class LineItUpGame {
         document.getElementById('submit-guess-btn').disabled = false;
 
         document.getElementById('gameplay-mode-label').innerText = 'Daily Challenge';
-        document.getElementById('gameplay-topic-label').innerText = `Theme: ${challenge.theme}`;
+        document.getElementById('gameplay-topic-label').innerText = challenge.theme || 'Find the hidden order';
         document.getElementById('opponent-history-wrapper').style.display = 'none';
         document.getElementById('multiplayer-vs-pill').style.display = 'none';
 
         // Map database challenge items into game engine layout items.
         // Older or incomplete admin saves can have a null image_path; Supabase's
         // getPublicUrl expects a string, so guard before calling it.
-        const secret = (challenge.items || []).map(item => {
+        const secret = (challenge.items || [])
+        .map(item => {
             const name = item?.name || 'Mystery Card';
             const imagePath = typeof item?.image_path === 'string' ? item.image_path.trim() : '';
             const fallbackImageUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}`;
@@ -1897,9 +1954,15 @@ class LineItUpGame {
                 icon: imagePath,
                 imageUrl
             };
-        });
+        })
+        .sort((a, b) => a.correct_index - b.correct_index);
 
         this.gameState.secretSequence = [...secret];
+        const promptText = typeof challenge.prompt === 'string' ? challenge.prompt : '';
+        const hiddenLogicMatch = promptText.match(/Hide the order through ([^.]+)\./i);
+        this.gameState.orderLogic = hiddenLogicMatch
+            ? `Order logic: ${hiddenLogicMatch[1]}.`
+            : `Order logic: ${challenge.theme || 'daily hidden sequence'}. Correct order: ${secret.map(item => item.name).join(' -> ')}.`;
 
         let shuffled = [...secret];
         let attempts = 0;

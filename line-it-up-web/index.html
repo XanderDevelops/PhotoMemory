@@ -13,7 +13,7 @@
     <!-- FontAwesome for Flat Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PeerJS CDN for WebRTC P2P Multiplayer -->
+    <!-- PeerJS CDN for online multiplayer -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     
     <!-- Platform and Game Style sheets -->
@@ -52,9 +52,6 @@
                 <button class="tab-btn active" data-tab="solo-panel">
                     <i class="fa-solid fa-user"></i> Solo
                 </button>
-                <button class="tab-btn" data-tab="bottle-panel">
-                    <i class="fa-solid fa-bottle-droplet"></i> Bottles
-                </button>
                 <button class="tab-btn" data-tab="multiplayer-panel">
                     <i class="fa-solid fa-users"></i> P2P
                 </button>
@@ -67,12 +64,12 @@
                 <!-- 1. SOLO PANEL -->
                 <section id="solo-panel" class="tab-content active">
                     <div class="card card-hero">
-                        <div class="card-tag">Authoritative Deduction</div>
-                        <h2>Standard Card Guessing</h2>
-                        <p class="desc">A secret sequence of 5 item cards is generated from a category. Swap cards on your board and try to align them perfectly within 8 guesses!</p>
+                        <div class="card-tag">Hidden Sequence</div>
+                        <h2>Solo Match</h2>
+                        <p class="desc">A secret sequence of 5 mixed cards is generated from a real-world or visual rule. Swap cards on your board and try to line them up in the correct order.</p>
                         
-                        <div class="category-selection">
-                            <label for="solo-category-select">Select Card Category:</label>
+                        <div class="category-selection" hidden>
+                            <label for="solo-category-select"></label>
                             <div class="retro-select-wrapper">
                                 <select id="solo-category-select" class="retro-select">
                                     <option value="animals">🐾 Animals</option>
@@ -92,36 +89,23 @@
                     </div>
                 </section>
 
-                <!-- 2. BOTTLE PANEL -->
-                <section id="bottle-panel" class="tab-content">
-                    <div class="card card-hero-alt">
-                        <div class="card-tag">Trending Gameplay</div>
-                        <h2>Color Bottle Sorting</h2>
-                        <p class="desc">Ditch the categories! 5 beautifully shaped glass test tubes are filled with distinct liquid color gradients. Organize them to crack the hidden sequence pattern!</p>
-                        
-                        <button id="start-bottle-btn" class="btn btn-secondary btn-large">
-                            <i class="fa-solid fa-bottle-droplet"></i> Play Bottle Mode
-                        </button>
-                    </div>
-                </section>
-
                 <!-- 3. MULTIPLAYER PANEL -->
                 <section id="multiplayer-panel" class="tab-content">
                     <div class="multiplayer-grid">
                         <!-- Direct P2P Connections -->
                         <div class="card">
-                            <h2>Zero-Cost Multiplayer</h2>
-                            <p class="desc">Direct WebRTC data channels broker a connection between browsers instantly without server costs! Share your code or search for ranked opponents.</p>
+                            <h2>Two Player Match</h2>
+                            <p class="desc">Share a match code with a friend. Both players solve the same fact-based sequence, and the fewest guesses wins.</p>
                             
                             <div class="mp-actions">
                                 <button id="host-match-btn" class="btn btn-accent">
-                                    <i class="fa-solid fa-circle-nodes"></i> Host Friendly
+                                    <i class="fa-solid fa-circle-nodes"></i> Host Match
                                 </button>
                                 
-                                <div class="separator"><span>OR JOIN HOST</span></div>
+                                <div class="separator"><span>OR JOIN</span></div>
                                 
                                 <div class="join-input-group">
-                                    <input type="text" id="join-peer-id-input" placeholder="Enter Host Peer ID..." class="retro-input">
+                                    <input type="text" id="join-peer-id-input" placeholder="Enter match code..." class="retro-input">
                                     <button id="join-match-btn" class="btn btn-primary">
                                         <i class="fa-solid fa-right-to-bracket"></i> Join
                                     </button>
@@ -131,7 +115,7 @@
 
                         <!-- Matchmaking & Invites -->
                         <div class="card">
-                            <h2>Matchmaking & Social</h2>
+                            <h2>Player Profile</h2>
                             
                             <div class="social-lobby">
                                 <div class="player-customizer">
@@ -157,7 +141,7 @@
                     <div class="card card-hero">
                         <div class="card-tag">Line It Up Daily</div>
                         <h2>Daily Challenge</h2>
-                        <p class="desc">A new hand-crafted puzzle generates every single day! Sliced from beautiful custom AI artwork. Complete them to build your daily streak!</p>
+                        <p class="desc">A new hand-crafted puzzle appears every day. Complete it to build your daily streak.</p>
                         
                         <!-- Premium Unlock Banner -->
                         <div id="daily-premium-banner" class="daily-premium-banner">
@@ -175,7 +159,7 @@
                         
                         <!-- Calendar Days Widget -->
                         <div class="calendar-wrapper">
-                            <h3>📅 Last 7 Days Challenges</h3>
+                            <h3>Daily Calendar</h3>
                             <div id="daily-calendar-grid" class="calendar-grid">
                                 <!-- Filled dynamically by JS -->
                             </div>
@@ -188,7 +172,7 @@
                                 <span class="challenge-badge theme-badge" id="selected-day-theme">Theme: Pop Culture</span>
                                 <span class="challenge-badge status-badge" id="selected-day-status">Completed</span>
                             </div>
-                            <p class="challenge-desc" id="selected-day-desc">Sequence deduction prompt.</p>
+                            <p class="challenge-desc" id="selected-day-desc">Find the hidden order.</p>
                             
                             <div class="play-action-area">
                                 <!-- Play/Replay controls -->
@@ -197,7 +181,7 @@
                                 </button>
                                 
                                 <div id="daily-ad-replay-area" style="display: none; text-align: center;">
-                                    <p class="cooldown-info-text">You already solved this daily challenge! Replay to get a better score by watching a rewarded ad.</p>
+                                    <p class="cooldown-info-text">You already solved this daily challenge. Replay to chase a better score.</p>
                                     <button id="replay-daily-ad-btn" class="btn btn-secondary btn-large" style="width: 100%;">
                                         <i class="fa-solid fa-video"></i> Replay with Ad
                                     </button>
@@ -273,7 +257,7 @@
             <div class="gameplay-header">
                 <div class="mode-info">
                     <span id="gameplay-mode-label" class="gameplay-tag">Solo Mode</span>
-                    <h2 id="gameplay-topic-label">Category: Space</h2>
+                    <h2 id="gameplay-topic-label">Find the hidden order</h2>
                 </div>
                 
                 <!-- multiplayer details -->
@@ -294,19 +278,19 @@
                         <i class="fa-solid fa-clock"></i> <span id="gameplay-timer">30</span>s
                     </div>
                     <div id="guess-counter-box" class="guess-counter">
-                        Guesses left: <span id="guesses-remaining">8</span>
+                        Guesses: <span id="guesses-remaining">8</span>
                     </div>
                 </div>
             </div>
 
             <div class="gameplay-main-layout">
-                <!-- THE BOARD (CARDS OR BOTTLES CONTAINER) -->
+                <!-- THE BOARD -->
                 <section class="gameplay-board">
                     <div id="slots-container" class="slots-container">
                         <!-- Dynamic slots instantiated here -->
                     </div>
                     <div class="board-hints">
-                        💡 Tap a card/bottle, then tap another to swap their positions. Tap Submit when ready!
+                        Tap a card, then tap another to swap their positions. Submit when ready.
                     </div>
                 </section>
 
@@ -352,10 +336,10 @@
     <div id="host-lobby-modal" class="modal-overlay">
         <div class="modal-box">
             <h2 class="modal-title alert-title">Lobby Hosted Successfully!</h2>
-            <p>Your unique WebRTC Peer ID has been generated. Share this ID or send the direct link to your friend to start a zero-cost P2P match!</p>
+            <p>Your match code is ready. Share it with a friend to start a two player match.</p>
             
             <div class="peer-code-box">
-                <span class="label">Host Peer ID:</span>
+                <span class="label">Match Code:</span>
                 <span id="host-peer-id-text" class="peer-code">----</span>
             </div>
 
@@ -383,7 +367,8 @@
             <p id="result-description" class="result-desc">You cracked the hidden combination in 5 rounds!</p>
             
             <div class="result-reveal">
-                <h3 id="result-reveal-header">Authoritative Secret Sequence:</h3>
+                <h3 id="result-reveal-header">Correct Order</h3>
+                <p id="result-order-logic" class="order-logic-text"></p>
                 <div id="secret-reveal-container" class="reveal-container">
                     <!-- Dynamic correct sequence items -->
                 </div>
@@ -426,7 +411,7 @@
                 <!-- Slide 1 -->
                 <div class="carousel-slide active">
                     <h3>1. The Goal</h3>
-                    <p>Arrange 5 item cards (or colored test tubes) to match a hidden sequence pattern in the minimum number of attempts. You have **8 guesses** total in Solo mode!</p>
+                    <p>Arrange 5 item cards to match a hidden sequence pattern in the minimum number of attempts.</p>
                     <div class="tutorial-graphic">
                         <div class="t-card">🐾 Card A</div>
                         <div class="t-card">🐾 Card B</div>
@@ -437,7 +422,7 @@
                 <!-- Slide 2 -->
                 <div class="carousel-slide">
                     <h3>2. Swapping & Submitting</h3>
-                    <p>Click/Tap any card/bottle to select it, then tap another card/bottle to swap their positions. When you are confident in your new layout, click **Submit Guess**.</p>
+                    <p>Tap any card to select it, then tap another card to swap their positions. When you are confident in your layout, submit your guess.</p>
                 </div>
 
                 <!-- Slide 3 -->
@@ -479,6 +464,18 @@
             <button id="close-view-stats-btn" class="btn btn-primary btn-block">
                 Close Stats
             </button>
+        </div>
+    </div>
+
+    <!-- 6. GAME-STYLED NOTICE / CONFIRM MODAL -->
+    <div id="game-message-modal" class="modal-overlay">
+        <div class="modal-box game-message-box">
+            <h2 id="game-message-title" class="modal-title">Notice</h2>
+            <p id="game-message-body">Message</p>
+            <div class="result-actions">
+                <button id="game-message-cancel-btn" class="btn btn-secondary btn-block">Cancel</button>
+                <button id="game-message-ok-btn" class="btn btn-primary btn-block">OK</button>
+            </div>
         </div>
     </div>
 
