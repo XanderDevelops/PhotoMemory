@@ -1234,13 +1234,14 @@ function exportActiveReport() {
         <meta charset="utf-8">
         <title>${escapeHtml(title)}</title>
         <style>
-          body { margin: 0; padding: 40px; color: #191816; font-family: Inter, Arial, sans-serif; background: #fffdf6; }
+          @font-face { font-family: "Photo Memory"; src: url("${new URL('fonts/Alegreya-Regular.otf', window.location.href).href}") format("opentype"); }
+          body { margin: 0; padding: 40px; color: #191816; font-family: "Photo Memory", Georgia, serif; background: #fff6e6; }
           .report { max-width: 980px; margin: 0 auto; }
           header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; padding-bottom: 22px; border-bottom: 3px solid #201d19; }
           h1, h2, h3, p { margin: 0; }
           h1 { font-size: 34px; }
           h2 { margin-top: 28px; font-size: 26px; }
-          h3 { margin-top: 24px; font-size: 17px; text-transform: uppercase; color: #1b6477; }
+          h3 { margin-top: 24px; font-size: 17px; text-transform: uppercase; color: #a72e20; }
           .meta { text-align: right; color: #706a60; font-size: 13px; }
           .identity { display: grid; gap: 5px; margin-top: 12px; color: #706a60; }
           .report-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 20px; }
@@ -1258,7 +1259,7 @@ function exportActiveReport() {
         <main class="report">
           <header>
             <div>
-              <p style="color:#1b6477;font-weight:800;text-transform:uppercase;font-size:12px;">Photo Memory dashboard</p>
+              <p style="color:#a72e20;font-weight:800;text-transform:uppercase;font-size:12px;">Photo Memory dashboard</p>
               <h1>${escapeHtml(title)}</h1>
               <div class="identity">
                 <span>${escapeHtml(profile.email || 'No email recorded')}</span>

@@ -5,8 +5,8 @@
   --paper: #fff8e8;
   --surface: #fffdf6;
   --surface-2: #f7ecd1;
-  --teal: #2f93a0;
-  --teal-dark: #1f6f78;
+  --teal: #c63d2b;
+  --teal-dark: #a72e20;
   --gold: #f6a21a;
   --red: #d93d2f;
   --green: #2f8d61;
@@ -28,7 +28,7 @@ body {
   min-height: 100vh;
   background: var(--paper);
   color: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Photo Memory", Georgia, serif;
   line-height: 1.45;
 }
 
@@ -73,7 +73,7 @@ select:focus,
 textarea:focus,
 .rich-editor:focus {
   border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(47, 147, 160, 0.16);
+  box-shadow: 0 0 0 3px rgba(198, 61, 43, 0.16);
 }
 
 label {
@@ -125,7 +125,7 @@ h3 {
   padding: 24px;
   background:
     radial-gradient(circle at 78% 12%, rgba(246, 162, 26, 0.24), transparent 28%),
-    linear-gradient(135deg, var(--paper), #edf7f7);
+    linear-gradient(135deg, var(--paper), #fff0d9);
 }
 
 .login-card {
@@ -1041,7 +1041,7 @@ td {
 
 .file-drop:hover {
   border-color: var(--teal);
-  background: #f4fbfb;
+  background: #fff0d9;
 }
 
 .file-drop input[type="file"] {
@@ -1327,7 +1327,7 @@ td {
 }
 
 .variation-block {
-  background: #ecfbfc;
+  background: #fff0d9;
 }
 
 .scene-block {
@@ -1395,8 +1395,8 @@ dialog::backdrop {
   --paper: #f7f1e4;
   --surface: #fffdf8;
   --surface-2: #efe6d3;
-  --teal: #2d929a;
-  --teal-dark: #0f6871;
+  --teal: #c63d2b;
+  --teal-dark: #a72e20;
   --gold: #f0a21a;
   --line: #24211d;
   --shadow: 0 18px 42px rgba(36, 33, 29, 0.08);
@@ -1460,7 +1460,7 @@ h2 {
   gap: 14px;
   padding: 18px 14px;
   border-right: 1px solid rgba(36, 33, 29, 0.16);
-  background: linear-gradient(180deg, #319aa3 0%, #227d86 100%);
+  background: linear-gradient(180deg, #c63d2b 0%, #a72e20 100%);
 }
 
 .sidebar-brand {
@@ -1717,8 +1717,8 @@ dialog {
 
 /* Retro refinement requested after review */
 :root {
-  --teal: #247f94;
-  --teal-dark: #1b6477;
+  --teal: #a72e20;
+  --teal-dark: #a72e20;
   --line: #201d19;
   --gold: #f6a21a;
 }
@@ -1757,7 +1757,7 @@ button:active {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #2b94a8 0%, #1f7386 100%);
+  background: linear-gradient(180deg, #c63d2b 0%, #a72e20 100%);
   border-right: 4px solid var(--line);
 }
 
@@ -1913,7 +1913,7 @@ h3 {
 
 .find-me-button {
   border-color: var(--teal-dark);
-  background: #e9f7f8;
+  background: #fff0d9;
   color: var(--teal-dark);
   box-shadow: 0 3px 0 var(--teal-dark);
   padding-inline: 16px;
@@ -1921,7 +1921,7 @@ h3 {
 
 .find-me-button:hover {
   border-color: var(--teal-dark);
-  background: #d9f0f3;
+  background: #fff0d9;
 }
 
 .leaderboard-pagination {
