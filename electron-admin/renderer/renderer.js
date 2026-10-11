@@ -199,21 +199,28 @@ async function loadChallengeForSelectedDate() {
 async function sendPromptToChatGPT(prompt) {
   if (!prompt) throw new Error('No prompt ready.');
 
-  // Wait for any active ChatGPT response generation to finish (up to 15 seconds)
+  // Wait for any active ChatGPT response generation to finish (up to 20 seconds)
   const waitScript = `
     (async () => {
-      const getStopButton = () => 
-        document.querySelector('[data-testid="stop-button"]') || 
-        document.querySelector('button[aria-label*="Stop"]') ||
-        document.querySelector('button[aria-label*="stop"]');
+      const getStopButton = () => {
+        const stopBtn = document.querySelector('[data-testid="stop-button"]') || 
+                        document.querySelector('button[aria-label*="Stop"]') ||
+                        document.querySelector('button[aria-label*="stop"]');
+        if (stopBtn) return stopBtn;
+        
+        return Array.from(document.querySelectorAll('button')).find(btn => {
+          const label = (btn.getAttribute('aria-label') || btn.textContent || '').toLowerCase();
+          return label.includes('stop generating') || label.includes('stop');
+        });
+      };
       
       let start = Date.now();
-      while (Date.now() - start < 15000) {
+      while (Date.now() - start < 20000) {
         if (!getStopButton()) break;
         await new Promise(r => setTimeout(r, 500));
       }
-      // Give React page state another second to settle
-      await new Promise(r => setTimeout(r, 1000));
+      // Give React page state a moment to settle
+      await new Promise(r => setTimeout(r, 800));
       return true;
     })();
   `;
@@ -234,6 +241,7 @@ async function sendPromptToChatGPT(prompt) {
         }
 
         editor.focus();
+        await new Promise(r => setTimeout(r, 100));
         
         // Clear any existing text first
         if (editor.tagName === 'TEXTAREA') {
@@ -241,8 +249,9 @@ async function sendPromptToChatGPT(prompt) {
           const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
           if (valueSetter) valueSetter.call(editor, '');
           editor.dispatchEvent(new Event('input', { bubbles: true }));
+          editor.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
-          editor.textContent = '';
+          // Select all and delete (clean Lexical-friendly way)
           document.execCommand('selectAll', false, null);
           document.execCommand('delete', false, null);
         }
@@ -260,47 +269,70 @@ async function sendPromptToChatGPT(prompt) {
           editor.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
           document.execCommand('insertText', false, prompt);
-          editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: prompt }));
-          editor.dispatchEvent(new Event('change', { bubbles: true }));
+          // Lexical updates natively on execCommand. Do not dispatch artificial events to avoid duplication!
         }
 
-        // Wait brief moment for React state to digest the change
-        await new Promise(r => setTimeout(r, 300));
+        // Wait brief moment for React/Lexical state to digest the change and enable the button
+        await new Promise(r => setTimeout(r, 500));
 
-        const selectors = [
-          '#composer-submit-button',
-          '[data-testid="send-button"]',
-          'button[aria-label*="Send"]',
-          'button[aria-label*="send"]',
-          'button[aria-label*="Enviar"]',
-          'button[aria-label*="enviar"]',
-          'button.composer-submit-btn',
-          'button.composer-submit-button-color'
-        ];
-        const sendButton =
-          selectors.map((selector) => document.querySelector(selector)).find(Boolean) ||
-          Array.from(document.querySelectorAll('button')).find((button) => {
+        const getSendButton = () => {
+          const selectors = [
+            'button[data-testid="send-button"]',
+            '#composer-submit-button',
+            'button[aria-label*="Send"]',
+            'button[aria-label*="send"]',
+            'button[aria-label*="Enviar"]',
+            'button[aria-label*="enviar"]',
+            'button.composer-submit-btn',
+            'button.composer-submit-button-color'
+          ];
+          const btn = selectors.map((selector) => document.querySelector(selector)).find(Boolean);
+          if (btn) return btn;
+          
+          return Array.from(document.querySelectorAll('button')).find((button) => {
             const label = (button.getAttribute('aria-label') || button.id || button.className || button.textContent || '').toLowerCase();
             return label.includes('send') || label.includes('submit') || label.includes('enviar') || label.includes('composer-submit');
           });
+        };
 
+        // Poll for the send button to become active / enabled naturally
+        let sendButton = null;
+        let start = Date.now();
+        while (Date.now() - start < 1000) {
+          sendButton = getSendButton();
+          if (sendButton && !sendButton.hasAttribute('disabled') && sendButton.getAttribute('disabled') !== 'true') {
+            break;
+          }
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        let sent = false;
         if (sendButton) {
-          sendButton.removeAttribute('disabled');
+          if (sendButton.hasAttribute('disabled') || sendButton.getAttribute('disabled') === 'true') {
+            sendButton.removeAttribute('disabled');
+          }
           sendButton.click();
+          sent = true;
+          await new Promise(r => setTimeout(r, 200));
         }
         
-        // Dispatch Enter key as an direct alternative/fallback
-        const enterEvent = new KeyboardEvent('keydown', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Enter',
-          code: 'Enter',
-          keyCode: 13,
-          which: 13
-        });
-        editor.dispatchEvent(enterEvent);
+        // Dispatch Enter key as an alternative/fallback ONLY if the button wasn't clicked 
+        // or if the click failed to submit (i.e. the editor text was not cleared)
+        const editorText = editor.tagName === 'TEXTAREA' ? editor.value : (editor.innerText || editor.textContent || '');
+        if ((!sent || editorText.trim().length > 0) && editor) {
+          const enterEvent = new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13
+          });
+          editor.dispatchEvent(enterEvent);
+          sent = true;
+        }
 
-        return { ok: true, value: true };
+        return { ok: true, value: sent };
       } catch (error) {
         return { ok: false, error: error.message || String(error) };
       }
@@ -593,23 +625,21 @@ async function sendImagePrompt() {
 
   if (generatorMode === 'line-it-up') {
     const plan = normalizeLineItUpPlan(questionsJsonInput.value.trim() || scenePromptInput.value.trim());
+    await window.photoMemoryAdmin.setPendingDownload({
+      rootPath: imagesRootInput.value,
+      date,
+      mode: 'line-it-up',
+    });
     await sendPromptToChatGPT([
-      `Generate the Line It Up daily challenge image for ${date}.`,
-      '',
-      'Create ONE single 1x5 horizontal strip with five square rounded-corner icon cards in the exact order below.',
-      'Each panel must be a square card crop with transparent background outside the rounded tile, a simple flat colored tile inside, and a centered subject.',
-      'The rounded square tile/card must have NO outline, NO border, and NO stroke around its edge. The centered subject may have a clean dark outline.',
-      'Use the attached coffee mug reference as the style target: flat cartoony illustration, rounded-corner colored box/card, clean dark outline, subtle flat shading, warm highlight, polished casual game asset.',
-      'All five icons must share the same scale, style, lighting, line weight, and camera angle.',
-      'Keep the sorting rule hidden and inferable. Subtle countable details, color shifts, shape complexity, or name-based clues are allowed, but no arrows, no numbers, no labels, no progress stages, no text, no logos, no UI, no realistic scenes.',
+      `Generate the Line It Up daily challenge sprite-sheet image for ${date}.`,
       '',
       plan.image_prompt,
       '',
       `Correct order: ${plan.items.join(' -> ')}`,
       '',
-      'Generate the image only.'
+      'Generate and provide the single horizontal sprite-sheet image only. Do NOT package as a zip, do NOT output multiple files.'
     ].join('\n'));
-    setStatus(`Line It Up image prompt sent for ${date}.`);
+    setStatus(`Line It Up sprite-sheet prompt sent for ${date}. Capture the image and it will save to that date folder.`);
     return;
   }
 
@@ -701,14 +731,17 @@ async function createFullLineItUpChallenge(date) {
 
   const beforeImage = await getLatestChatGPTImageInfo();
   await sendImagePrompt();
-  const captured = await waitForNewChatGPTImage(beforeImage, 420000, { saveDaily: false });
-  const imageDataUrl = captured?.image?.dataUrl || lastCapturedImageDataUrl;
-  if (!imageDataUrl) throw new Error('Could not capture the generated Line It Up image.');
 
-  setStatus(`Line It Up image captured for ${date}. Slicing and uploading...`);
-  await uploadLineItUpChallengeToSupabase(date, plan, imageDataUrl);
+  await waitForNewChatGPTImage(beforeImage, 420000, { saveDaily: false });
+  
+  // Wait for the same image to be generated with a transparent background
+  const beforeTransparentImage = await getLatestChatGPTImageInfo();
+  await sendPromptToChatGPT("Now send the same exact image with a transparent background");
+  const transparentCaptureResult = await waitForNewChatGPTImage(beforeTransparentImage, 420000, { saveDaily: false });
+
+  setStatus(`Line It Up transparent image captured for ${date}. Syncing to Supabase...`);
+  await uploadLineItUpChallengeToSupabase(date, plan, transparentCaptureResult.image.dataUrl);
   await refreshDashboardLineItUp();
-  renderLineItUpPreview(date, plan, imageDataUrl);
   setStatus(`Line It Up challenge synced to Supabase for ${date}.`);
 }
 
@@ -1068,7 +1101,6 @@ async function uploadLineItUpChallengeToSupabase(date, plan, imageDataUrl) {
   });
   renderScan(localResult.scan);
 
-  const slices = await sliceLineItUpStrip(imageDataUrl);
   const challengeData = {
     id: null,
     challenge_date: date,
@@ -1083,7 +1115,6 @@ async function uploadLineItUpChallengeToSupabase(date, plan, imageDataUrl) {
     items: plan.items.map((name, index) => ({
       name,
       correct_index: index,
-      imageFile: slices[index],
     })),
   };
 

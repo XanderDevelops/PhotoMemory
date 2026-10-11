@@ -917,15 +917,181 @@ class LineItUpGame {
             
             const card = document.createElement('div');
             card.className = `card-slot ${isSelected ? 'selected' : ''}`;
-            const imgSrc = this.itemImageSrc(item);
+            
+            let imgHtml = '';
+            if (item.spriteSheetUrl) {
+                imgHtml = `<div class="card-sprite-sheet" style="width: 100px; height: 100px; border-radius: 8px; margin: 0 auto 8px; background-image: url('${item.spriteSheetUrl}'); background-size: 500% 100%; background-position: ${(item.correct_index * 25)}% 0; background-repeat: no-repeat;"></div>`;
+            } else {
+                const imgSrc = this.itemImageSrc(item);
+                imgHtml = `<img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">`;
+            }
+
             card.innerHTML = `
                 <div class="card-tag">#${index + 1}</div>
-                <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">
+                ${imgHtml}
                 <span>${item.name}</span>
             `;
-            card.addEventListener('click', () => this.handleSlotClick(index));
+            
+            // Mouse/touch click fallback
+            card.addEventListener('click', () => {
+                if (card.getAttribute('data-dragged') === 'true') {
+                    card.removeAttribute('data-dragged');
+                    return;
+                }
+                this.handleSlotClick(index);
+            });
+
+            // Pointer events for drag and drop
+            card.addEventListener('pointerdown', (e) => this.handlePointerDown(e, index, card));
+
             slotsContainer.appendChild(card);
         });
+    }
+
+    handlePointerDown(e, index, card) {
+        if (this.isAnimatingSwap) return;
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+        try {
+            card.setPointerCapture(e.pointerId);
+        } catch (err) {}
+
+        this.dragState = {
+            pointerId: e.pointerId,
+            cardElement: card,
+            startIndex: index,
+            currentIndex: index,
+            startX: e.clientX,
+            startY: e.clientY,
+            hasDragged: false,
+            slotElements: Array.from(document.getElementById('slots-container').children),
+            slotRects: Array.from(document.getElementById('slots-container').children).map(el => el.getBoundingClientRect()),
+            currentLayout: [...this.gameState.boardState],
+            positionsMap: [0, 1, 2, 3, 4]
+        };
+
+        card.classList.add('dragging');
+
+        const onPointerMove = (moveEvent) => {
+            if (!this.dragState || moveEvent.pointerId !== this.dragState.pointerId) return;
+            this.handleDragMove(moveEvent);
+        };
+
+        const onPointerUp = (upEvent) => {
+            if (!this.dragState || upEvent.pointerId !== this.dragState.pointerId) return;
+            
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerUp);
+
+            this.handleDragUp(upEvent);
+        };
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+    }
+
+    handleDragMove(e) {
+        const state = this.dragState;
+        const dx = e.clientX - state.startX;
+        const dy = e.clientY - state.startY;
+
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+            state.hasDragged = true;
+            state.cardElement.setAttribute('data-dragged', 'true');
+        }
+
+        if (!state.hasDragged) return;
+
+        state.cardElement.style.transform = `translate(${dx}px, ${dy}px) scale(1.05)`;
+
+        const draggedRect = state.cardElement.getBoundingClientRect();
+        const draggedCenterX = draggedRect.left + draggedRect.width / 2;
+
+        let closestIndex = state.currentIndex;
+        let minDistance = Infinity;
+
+        state.slotRects.forEach((rect, idx) => {
+            const rectCenterX = rect.left + rect.width / 2;
+            const dist = Math.abs(draggedCenterX - rectCenterX);
+            if (dist < minDistance) {
+                minDistance = dist;
+                closestIndex = idx;
+            }
+        });
+
+        if (closestIndex !== state.currentIndex) {
+            const prevIndex = state.currentIndex;
+            state.currentIndex = closestIndex;
+
+            const otherDomIdx = state.positionsMap.indexOf(closestIndex);
+            
+            if (otherDomIdx !== -1 && otherDomIdx !== state.startIndex) {
+                state.positionsMap[otherDomIdx] = prevIndex;
+                state.positionsMap[state.startIndex] = closestIndex;
+
+                const otherEl = state.slotElements[otherDomIdx];
+                const targetRect = state.slotRects[prevIndex];
+                const originalRect = state.slotRects[otherDomIdx];
+
+                const shiftX = targetRect.left - originalRect.left;
+                const shiftY = targetRect.top - originalRect.top;
+
+                otherEl.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+            }
+        }
+    }
+
+    handleDragUp(e) {
+        const state = this.dragState;
+        
+        try {
+            state.cardElement.releasePointerCapture(state.pointerId);
+        } catch (err) {}
+
+        state.cardElement.classList.remove('dragging');
+
+        if (state.hasDragged) {
+            this.isAnimatingSwap = true;
+
+            // Apply visual transitions to slide cards to their final resting slots
+            state.slotElements.forEach((el, domIdx) => {
+                el.style.transition = 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                const virtualSlotIdx = state.positionsMap[domIdx];
+                const targetRect = state.slotRects[virtualSlotIdx];
+                const originalRect = state.slotRects[domIdx];
+                const shiftX = targetRect.left - originalRect.left;
+                const shiftY = targetRect.top - originalRect.top;
+                el.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+            });
+
+            // Wait for release animation to complete before committing boardState
+            setTimeout(() => {
+                const newBoardState = new Array(5);
+                state.positionsMap.forEach((virtualSlotIdx, domIdx) => {
+                    newBoardState[virtualSlotIdx] = state.currentLayout[domIdx];
+                });
+
+                this.gameState.boardState = newBoardState;
+                
+                state.slotElements.forEach(el => {
+                    el.style.transform = '';
+                    el.style.transition = '';
+                });
+
+                this.gameState.selectedSlotIndex = null;
+                this.isAnimatingSwap = false;
+                this.renderBoardSlots();
+                this.playSFX('pop');
+            }, 150);
+        } else {
+            state.slotElements.forEach(el => {
+                el.style.transform = '';
+            });
+        }
+
+        this.dragState = null;
     }
 
     // Swap items logic
@@ -1158,9 +1324,16 @@ class LineItUpGame {
             const card = document.createElement('div');
             card.className = 'reveal-card';
             
-            const imgSrc = this.itemImageSrc(item);
+            let imgHtml = '';
+            if (item.spriteSheetUrl) {
+                imgHtml = `<div class="card-sprite-sheet" style="width: 80px; height: 80px; border-radius: 8px; margin: 0 auto 8px; background-image: url('${item.spriteSheetUrl}'); background-size: 500% 100%; background-position: ${(item.correct_index * 25)}% 0; background-repeat: no-repeat;"></div>`;
+            } else {
+                const imgSrc = this.itemImageSrc(item);
+                imgHtml = `<img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">`;
+            }
+
             card.innerHTML = `
-                <img src="${imgSrc}" alt="${item.name}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(item.name)}'">
+                ${imgHtml}
                 <span>${item.name}</span>
             `;
             container.appendChild(card);
@@ -1206,9 +1379,18 @@ class LineItUpGame {
         this.networkRole = 'host';
 
         try {
-            // Instantiate PeerJS client - using default open Peer server
+            // Instantiate PeerJS client - using default open Peer server with robust STUN fallback
             this.peer = new Peer({
-                debug: 1
+                debug: 1,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ]
+                }
             });
 
             this.peer.on('open', (id) => {
@@ -1251,7 +1433,18 @@ class LineItUpGame {
         joinBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
 
         try {
-            this.peer = new Peer({ debug: 1 });
+            this.peer = new Peer({
+                debug: 1,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ]
+                }
+            });
 
             this.peer.on('open', (myId) => {
                 console.log(`[P2P] Client Peer open with ID: ${myId}. Connecting to host...`);
@@ -1277,7 +1470,7 @@ class LineItUpGame {
     }
 
     setupDataChannelListeners() {
-        this.conn.on('open', () => {
+        const onOpen = () => {
             console.log("[P2P] Peer connection fully opened and ready!");
             this.peerConnected = true;
             
@@ -1297,7 +1490,14 @@ class LineItUpGame {
                 username: this.profile.username,
                 avatar: this.profile.avatar
             });
-        });
+        };
+
+        if (this.conn.open) {
+            console.log("[P2P] Connection already open, executing handler immediately.");
+            onOpen();
+        } else {
+            this.conn.on('open', onOpen);
+        }
 
         this.conn.on('data', (data) => {
             console.log("[P2P] Received Message Payload:", data);
@@ -1316,7 +1516,8 @@ class LineItUpGame {
     }
 
     sendP2PMessage(msg) {
-        if (this.conn && this.peerConnected) {
+        if (this.conn && (this.peerConnected || this.conn.open)) {
+            this.peerConnected = true;
             this.conn.send(msg);
         }
     }
@@ -1939,6 +2140,12 @@ class LineItUpGame {
         // Map database challenge items into game engine layout items.
         // Older or incomplete admin saves can have a null image_path; Supabase's
         // getPublicUrl expects a string, so guard before calling it.
+        const spriteSheetUrl = challenge.sprite_sheet_url || (challenge.sprite_sheet_path
+            ? this.supabase.storage.from('daily-challenge').getPublicUrl(challenge.sprite_sheet_path).data.publicUrl
+            : null) || (challenge.image_path
+            ? this.supabase.storage.from('daily-challenge').getPublicUrl(challenge.image_path).data.publicUrl
+            : null);
+
         const secret = (challenge.items || [])
         .map(item => {
             const name = item?.name || 'Mystery Card';
@@ -1946,13 +2153,14 @@ class LineItUpGame {
             const fallbackImageUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}`;
             const imageUrl = item?.image_url || (imagePath
                 ? this.supabase.storage.from('daily-challenge').getPublicUrl(imagePath).data.publicUrl
-                : fallbackImageUrl);
+                : null);
 
             return {
                 name,
                 correct_index: Number(item?.correct_index ?? 0),
                 icon: imagePath,
-                imageUrl
+                imageUrl: imageUrl || fallbackImageUrl,
+                spriteSheetUrl: imageUrl ? null : spriteSheetUrl
             };
         })
         .sort((a, b) => a.correct_index - b.correct_index);

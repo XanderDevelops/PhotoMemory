@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Memory Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  
+  <link rel="stylesheet" href="progress.css" />
+  <script defer src="insights.js"></script>
+  <script defer src="progress-view.js"></script>
+  <script defer src="preview-data.js"></script>
+</head>
+<body>
+  <section id="login-view" class="login-shell" hidden>
+    <form id="login-form" class="login-card">
+      <img src="../assets/logo.png" alt="Photo Memory logo" />
+      <p class="eyebrow">Player dashboard</p>
+      <h1>Photo Memory</h1>
+      <div id="email-step" class="login-step">
+        <label>
+          Email
+          <input id="login-email" type="email" autocomplete="email" required />
+        </label>
+        <button id="send-otp-btn" type="submit">Send code</button>
+      </div>
+      <div id="otp-step" class="login-step" hidden>
+        <p class="muted">Enter the 6-digit code sent to <strong id="otp-email-display"></strong>.</p>
+        <div class="otp-grid" aria-label="One time password">
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 1" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 2" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 3" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 4" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 5" />
+          <input class="otp-input" inputmode="numeric" maxlength="1" aria-label="Digit 6" />
+        </div>
+        <button id="verify-otp-btn" type="button">Verify code</button>
+        <button id="change-email-btn" type="button" class="secondary-button">Use another email</button>
+      </div>
+      <p id="login-error" class="form-error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app-view" class="app-shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="../index.html">
+        <img src="../assets/logo.png" alt="" />
+        <span>Photo Memory</span>
+      </a>
+      <div class="admin-card" style="display: flex; align-items: center; gap: 12px; padding: 12px;">
+        <img id="admin-avatar" class="user-avatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; border: 2.5px solid var(--line); display: none; object-fit: cover; flex-shrink: 0;" />
+        <div style="min-width: 0; flex-grow: 1; display: grid; gap: 3px;">
+          <span id="admin-role" style="width: fit-content;">Admin</span>
+          <strong id="admin-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">Loading...</strong>
+          <small id="admin-email" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></small>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="Admin sections">
+        <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="history">Test History</button>
+        <button data-tab="highscores">High Scores</button>
+        <button data-tab="leaderboard">Leaderboard</button>
+        <button data-admin-only data-tab="users" hidden>All Users</button>
+        <button data-admin-only data-tab="mail" hidden>Mail Studio</button>
+        <button data-admin-only data-tab="notifications" hidden>Push Notifications</button>
+        <button data-admin-only data-tab="daily" hidden>Daily Challenges</button>
+        <button data-admin-only data-tab="line-it-up-daily" hidden>Line It Up Daily</button>
+        <button data-admin-only data-tab="contextual" hidden>Contextual Memory</button>
+        <button data-admin-only data-tab="settings" hidden>Settings</button>
+      </nav>
+      <button id="logout-btn" class="ghost-button">Logout</button>
+    </aside>
+
+    <main class="workspace">
+      <p class="preview-banner">Design preview · illustrative sample results · no account or server data</p><header class="workspace-header">
+        <button id="menu-btn" class="icon-button" aria-label="Toggle menu">Menu</button>
+        <div>
+          <p class="eyebrow">Photo Memory dashboard</p>
+          <h1 id="page-title">Overview</h1>
+        </div>
+        <div class="workspace-actions">
+          <button id="export-report-btn" class="secondary-button">Export report</button>
+          <button id="refresh-btn" class="secondary-button">Refresh</button>
+        </div>
+      </header>
+
+      <p id="toast" class="toast" hidden></p>
+
+      <section id="overview-panel" class="panel active">
+        <section id="admin-insights" data-admin-only hidden></section>
+        <div class="progress-hero">
+          <div><p class="eyebrow">Your memory, in focus</p><h2>A little practice.<br>A clearer picture of your progress.</h2><p>See what is improving, find your next focus, and build a routine that lasts.</p></div>
+          <div class="progress-emblem" aria-hidden="true">◎</div>
+        </div>
+        <div id="history-load-status" class="progress-error" role="status" hidden></div>
+        <div class="progress-toolbar"><h2>Training overview</h2><label for="progress-range">Show<select id="progress-range"><option value="0">All tests</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label></div>
+        <div class="progress-metrics">
+          <article class="surface"><span class="metric-label">Latest assessment</span><div id="progress-latest" class="progress-number">—</div><p class="progress-subtext">Out of 1,240 test points</p></article>
+          <article class="surface"><span class="metric-label">Recent change</span><div id="progress-change" class="progress-number">—</div><p id="progress-change-note" class="progress-subtext">Complete 4 tests to see a trend</p></article>
+          <article class="surface"><span class="metric-label">Training days</span><div id="progress-days" class="progress-number">—</div><p class="progress-subtext">Days with a dated test · last 28 days</p></article>
+          <article class="surface"><span class="metric-label">Tests in this view</span><div id="metric-tests" class="progress-number">—</div><p id="progress-best" class="progress-subtext">Your personal best will appear here</p></article>
+        </div>
+        <div class="progress-grid">
+          <section class="surface"><div class="section-heading"><div><p class="eyebrow">The bigger picture</p><h2>Assessment progress</h2></div><span class="pill">Same test · 5 skills</span></div><div id="progress-chart"></div><p id="progress-chart-note" class="progress-subtext"></p></section>
+          <section class="surface"><p class="eyebrow">Know your strengths</p><h2>Your skill balance</h2><div id="progress-skills"></div><p class="progress-subtext">Average of up to 5 recent tests, as a share of each skill’s maximum.</p></section>
+          <section class="surface"><p class="eyebrow">Small steps add up</p><h2>Your training rhythm</h2><div id="progress-calendar" class="calendar-grid"></div><div class="calendar-legend"><span>28 days ago</span><span>Today</span></div><p id="progress-date-note" class="progress-subtext"></p></section>
+          <section class="surface practice-card"><p class="eyebrow">Your next focus</p><h2 id="progress-focus-title">Start with an assessment</h2><p id="progress-focus-copy">Complete a full memory test in the app to build your baseline.</p><p id="progress-focus-note" class="progress-subtext">A practice suggestion based on your game results.</p></section>
+        </div>
+        <p class="report-note">These are game performance measures, not a clinical assessment or a measure of intelligence. Login streaks and training days are tracked separately.</p>
+        <div class="overview-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Latest activity</p>
+                <h2>Recent tests</h2>
+              </div>
+              <button class="secondary-button" data-jump="history">View all</button>
+            </div>
+            <div id="recent-tests-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Personal bests</p>
+                <h2>Top high scores</h2>
+              </div>
+              <button class="secondary-button" data-jump="highscores">View all</button>
+            </div>
+            <div id="top-highscores-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface" style="grid-column: 1 / -1;">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Network</p>
+                <h2>Friends</h2>
+              </div>
+            </div>
+            <div id="friends-list" class="compact-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="history-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Your progress</p>
+              <h2>Test History</h2>
+            </div>
+          </div>
+          <div id="history-list" class="compact-list"></div>
+        </div>
+      </section>
+
+      <section id="highscores-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Game modes</p>
+              <h2>High Scores</h2>
+            </div>
+          </div>
+          <div class="highscore-controls">
+            <div class="highscore-control-row">
+              <label>Compare with a player's email
+                <input id="compare-player-email" type="email" placeholder="player@example.com" />
+              </label>
+              <div class="highscore-action-group">
+                <button id="compare-player-btn" class="secondary-button" type="button">Compare</button>
+                <button id="clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+              </div>
+            </div>
+            <div class="highscore-control-row" style="margin-top: 10px;">
+              <label>Or select a friend to compare
+                <select id="compare-friend-select">
+                  <option value="">Choose a friend...</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div id="comparison-summary" class="comparison-summary"></div>
+          <div id="highscore-groups"></div>
+        </div>
+      </section>
+
+      <section id="users-panel" class="panel">
+        <div class="surface">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Audience</p>
+              <h2>Users</h2>
+            </div>
+            <div class="row-actions">
+              <button id="email-selected-btn" class="secondary-button">Email selected</button>
+              <button id="notify-selected-btn" class="secondary-button">Notify selected</button>
+            </div>
+          </div>
+
+          <div class="filter-grid">
+            <label>Search<input id="user-search" type="search" placeholder="Name or email" /></label>
+            <label>Status
+              <select id="verified-filter">
+                <option value="all">All users</option>
+                <option value="verified">Verified only</option>
+                <option value="unverified">Unverified only</option>
+                <option value="blocked">Blocked only</option>
+              </select>
+            </label>
+            <label>Min streak<input id="min-streak-filter" type="number" min="0" placeholder="0" /></label>
+            <label>Joined after<input id="joined-after-filter" type="date" /></label>
+            <label>Joined before<input id="joined-before-filter" type="date" /></label>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input id="select-all-users" type="checkbox" aria-label="Select all visible users" /></th>
+                  <th>User</th>
+                  <th>Status</th>
+                  <th>Streak</th>
+                  <th>Joined</th>
+                  <th>Emails</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+            <div id="users-pagination" class="pagination-controls users-pagination-row">
+              <span id="users-pagination-info" class="muted">Showing 0-0 of 0</span>
+              <div class="row-actions users-pagination-actions">
+                <button id="users-prev-page-btn" class="secondary-button" type="button">Previous</button>
+                <button id="users-next-page-btn" class="secondary-button" type="button">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mail-panel" class="panel">
+        <div class="surface mail-studio mail-expanded">
+          <div class="section-heading mail-studio-heading">
+            <div>
+              <p class="eyebrow">Campaigns</p>
+              <h2>Mail Studio</h2>
+              <p class="muted">Design emails, load presets, send reminders, and build templates with the AI helper.</p>
+            </div>
+          </div>
+
+          <div class="mail-studio-grid">
+            <section class="mail-composer">
+              <div class="mail-panel-card mail-presets-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">Presets</p>
+                    <h3>Email templates</h3>
+                  </div>
+                  <span class="preset-count" id="mail-preset-count">0</span>
+                </div>
+                <div id="mail-preset-list" class="mail-preset-list"></div>
+                <div class="mail-preset-save">
+                  <label>Preset name
+                    <input id="mail-preset-name" type="text" placeholder="New preset name" />
+                  </label>
+                  <button id="save-preset-btn" class="secondary-button" type="button">Save preset</button>
+                </div>
+              </div>
+
+              <div class="mail-panel-card">
+                <label>Subject
+                  <input id="mail-subject" type="text" value="A note from Photo Memory" />
+                </label>
+
+                <div class="mail-design-grid">
+                  <label>Google font link
+                    <input id="mail-font-link" type="url" placeholder="https://fonts.googleapis.com/css2?family=Inter..." />
+                  </label>
+                  <label>Font family
+                    <input id="mail-font-family" type="text" value="Inter, Arial, sans-serif" />
+                  </label>
+                  <label>Email width
+                    <input id="mail-canvas-width" type="number" min="320" max="900" step="10" value="640" />
+                  </label>
+                  <label>Canvas height
+                    <input id="mail-canvas-height" type="number" min="360" max="1800" step="20" value="720" />
+                  </label>
+                  <label>Page color
+                    <input id="mail-bg-color" type="color" value="#fff8e8" />
+                  </label>
+                  <label>Email color
+                    <input id="mail-card-color" type="color" value="#fffdf6" />
+                  </label>
+                  <label>Dark page color
+                    <input id="mail-dark-bg-color" type="color" value="#11100f" />
+                  </label>
+                  <label>Dark email color
+                    <input id="mail-dark-card-color" type="color" value="#1d1a17" />
+                  </label>
+                  <label>Dark text color
+                    <input id="mail-dark-text-color" type="color" value="#fff8e8" />
+                  </label>
+                </div>
+
+                <div class="editor-header">
+                  <div class="editor-toolbar">
+                    <button id="mail-add-text-btn" type="button">Text</button>
+                    <button id="mail-add-image-btn" type="button">Image</button>
+                    <button id="mail-add-button-btn" type="button">Button</button>
+                    <button id="mail-add-spacer-btn" type="button">Spacer</button>
+                  </div>
+                  <div class="editor-toolbar">
+                    <button id="mail-expand-canvas-btn" class="secondary-button" type="button">Full view</button>
+                    <button id="toggle-editor-mode-btn" class="secondary-button" type="button">HTML</button>
+                  </div>
+                </div>
+
+                <label id="mail-image-url-row" class="mail-image-url-row">Image URL
+                  <input id="mail-image-url" type="url" placeholder="https://..." />
+                </label>
+                <div class="mail-hosted-image-row">
+                  <label>Host image for email
+                    <input id="mail-hosted-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                  </label>
+                  <button id="mail-upload-hosted-image-btn" class="secondary-button" type="button">Upload image</button>
+                  <span id="mail-hosted-image-status" class="muted">No hosted image selected</span>
+                </div>
+
+                <div class="mail-canvas-preview-grid">
+                  <div class="mail-canvas-column">
+                    <div class="mail-column-heading">
+                      <div>
+                        <p class="eyebrow">Editor</p>
+                        <h3>Canvas</h3>
+                      </div>
+                    </div>
+                    <div id="mail-editor" class="rich-editor mail-rich-editor" aria-label="Email canvas"></div>
+                    <textarea id="mail-editor-source" class="rich-editor mail-source-editor" placeholder="HTML source code"></textarea>
+                  </div>
+
+                  <div class="mail-preview-column">
+                    <div class="mail-column-heading">
+                      <div>
+                        <p class="eyebrow">Preview</p>
+                        <h3>Email view</h3>
+                      </div>
+                      <div class="segmented-toggle" role="group" aria-label="Preview color mode">
+                        <button id="mail-preview-light-btn" class="active" type="button" data-mail-preview-mode="light">Light</button>
+                        <button id="mail-preview-dark-btn" type="button" data-mail-preview-mode="dark">Dark</button>
+                      </div>
+                    </div>
+                    <iframe id="mail-preview-frame" class="mail-preview-frame" title="Email preview"></iframe>
+                  </div>
+                </div>
+              </div>
+
+            </section>
+
+            <aside class="mail-side-panel">
+              <section class="mail-panel-card mail-selected-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">Selected block</p>
+                    <h3>Position and style</h3>
+                  </div>
+                </div>
+                <div class="mail-block-grid">
+                  <label>Text
+                    <textarea id="mail-block-text" rows="3" placeholder="Select a text or button block"></textarea>
+                  </label>
+                  <label>Link URL
+                    <input id="mail-block-link" type="url" placeholder="https://..." />
+                  </label>
+                  <label>X<input id="mail-block-x" type="number" step="1" /></label>
+                  <label>Y<input id="mail-block-y" type="number" step="1" /></label>
+                  <label>Width<input id="mail-block-width" type="number" min="20" step="1" /></label>
+                  <label>Height<input id="mail-block-height" type="number" min="12" step="1" /></label>
+                  <label>Font size<input id="mail-block-font-size" type="number" min="8" max="72" step="1" /></label>
+                  <label>Radius<input id="mail-block-radius" type="number" min="0" max="80" step="1" /></label>
+                  <label>Text color<input id="mail-block-color" type="color" /></label>
+                  <label>Fill color<input id="mail-block-bg" type="color" /></label>
+                </div>
+                <div class="mail-action-grid">
+                  <button id="mail-duplicate-block-btn" class="secondary-button" type="button">Duplicate</button>
+                  <button id="mail-delete-block-btn" class="secondary-button" type="button">Delete block</button>
+                </div>
+              </section>
+
+              <section class="mail-panel-card mail-options-card">
+                <div class="mail-file-grid">
+                  <label class="file-drop">Attachments
+                    <input id="mail-attachments-file" type="file" multiple />
+                    <span id="mail-attachments-status" class="muted">No attachments</span>
+                  </label>
+                  <label class="file-drop">Inline image files
+                    <input id="mail-images-file" type="file" accept="image/*" multiple />
+                    <span id="mail-images-status" class="muted">No uploaded images</span>
+                  </label>
+                </div>
+
+                <div class="send-grid mail-send-grid">
+                  <label>Audience
+                    <select id="mail-audience">
+                      <option value="selected">Selected users</option>
+                      <option value="filtered">Current filtered users</option>
+                      <option value="unverified">Unverified users</option>
+                      <option value="all">All users</option>
+                    </select>
+                  </label>
+                  <button id="mail-review-recipients-btn" class="secondary-button" type="button">Review recipients</button>
+                  <button id="send-mail-btn">Send campaign</button>
+                </div>
+              </section>
+
+              <section class="mail-panel-card">
+                <div class="mail-panel-heading">
+                  <div>
+                    <p class="eyebrow">AI assistant</p>
+                    <h3>ChatGPT Mail Prompter</h3>
+                  </div>
+                </div>
+                <label>Email theme
+                  <textarea id="mail-ai-desc" rows="3" placeholder="Welcome email with 3 memory tips and streak advice."></textarea>
+                </label>
+                <button id="generate-ai-prompt-btn" class="secondary-button" type="button">Copy ChatGPT prompt</button>
+
+                <label>Paste ChatGPT response
+                  <textarea id="mail-ai-response" rows="5" placeholder="Paste a response containing <TO COPY>...html...</TO COPY> tags."></textarea>
+                </label>
+                <button id="extract-ai-mail-btn" class="secondary-button" type="button">Extract HTML</button>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="notifications-panel" class="panel">
+        <div class="surface push-studio">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Push notifications</p>
+              <h2>Push Notifications Studio</h2>
+              <p class="muted">Schedule dashboard push messages separately from email campaigns.</p>
+            </div>
+          </div>
+          <div class="push-form-grid">
+            <label>Title<input id="notification-title" type="text" placeholder="New challenge ready" /></label>
+            <label>Send date and hour<input id="notification-scheduled-at" type="datetime-local" /></label>
+            <label class="full-span">Message<textarea id="notification-body" rows="5" placeholder="Tell players what changed..."></textarea></label>
+            <label class="full-span">Optional link<input id="notification-link" type="url" placeholder="https://..." /></label>
+          </div>
+          <div class="send-grid push-send-grid">
+            <label>Audience
+              <select id="notification-audience">
+                <option value="selected">Selected users</option>
+                <option value="filtered">Current filtered users</option>
+                <option value="unverified">Unverified users</option>
+                <option value="all">All users</option>
+              </select>
+            </label>
+            <button id="notification-review-recipients-btn" class="secondary-button" type="button">Review recipients</button>
+            <button id="create-notification-btn">Schedule push</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="leaderboard-panel" class="panel">
+        <div class="leaderboard-shell">
+          <div class="leaderboard-header">
+            <div>
+              <p class="eyebrow">Challenge your friends</p>
+              <p>See how you rank against other players. More tests and higher scores improve your standing.</p>
+            </div>
+            <span id="leaderboard-current-rank" class="leaderboard-current-rank">Your rank is loading...</span>
+          </div>
+
+          <p id="leaderboard-warning" class="leaderboard-warning" hidden></p>
+
+          <div class="leaderboard-stats">
+            <article>
+              <span>Total Players</span>
+              <strong id="leaderboard-total-players">0</strong>
+            </article>
+            <article>
+              <span>Total Tests</span>
+              <strong id="leaderboard-total-tests">0</strong>
+            </article>
+            <article>
+              <span>Top Score</span>
+              <strong id="leaderboard-top-score">0</strong>
+            </article>
+          </div>
+
+          <div class="leaderboard-controls">
+            <div class="leaderboard-control-row">
+              <label>Compare leaderboard with a player's email
+                <input id="leaderboard-compare-email" type="email" placeholder="player@example.com" />
+              </label>
+              <div class="leaderboard-action-group">
+                <button id="leaderboard-compare-btn" class="secondary-button" type="button">Compare</button>
+                <button id="leaderboard-clear-comparison-btn" class="secondary-button" type="button">Clear</button>
+              </div>
+            </div>
+
+            <div class="leaderboard-control-row">
+              <label>Search players
+                <input id="leaderboard-search" type="search" placeholder="Search by name" />
+              </label>
+              <button id="leaderboard-find-me-btn" class="find-me-button" type="button">Find me</button>
+            </div>
+          </div>
+          <div id="leaderboard-comparison" class="comparison-summary dark"></div>
+
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th aria-sort="ascending"><button class="leaderboard-sort-button active" data-leaderboard-sort="rank" data-direction="up" type="button">Rank</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="name" type="button">Name</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="testCount" type="button">Tests</button></th>
+                  <th aria-sort="none"><button class="leaderboard-sort-button" data-leaderboard-sort="score" type="button">Score</button></th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-list"></tbody>
+            </table>
+          </div>
+
+          <div class="leaderboard-pagination">
+            <button id="leaderboard-prev-btn" class="secondary-button" type="button">Previous</button>
+            <span id="leaderboard-pagination-info">Showing 0 players</span>
+            <button id="leaderboard-next-btn" class="secondary-button" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="daily-panel" class="panel">
+        <div class="builder-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Daily scenes</p>
+                <h2>Daily Challenges</h2>
+              </div>
+              <button id="new-daily-btn" class="secondary-button">New challenge</button>
+            </div>
+             <div id="daily-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="daily-form" class="builder-form">
+              <input id="daily-id" type="hidden" />
+              <h2 id="daily-form-title">New challenge</h2>
+              <label>Date<input id="daily-date" type="date" required /></label>
+              <label>Image path<input id="daily-image-path" type="text" placeholder="Optional existing storage path" /></label>
+              <label>Upload image<input id="daily-image-file" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+              <div id="daily-image-preview" class="image-preview">No image selected</div>
+              <div class="section-heading compact-heading">
+                <h3>Questions</h3>
+                <button id="add-daily-question-btn" type="button" class="secondary-button">Add question</button>
+              </div>
+              <div id="daily-questions"></div>
+              <button type="submit">Save daily challenge</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="line-it-up-daily-panel" class="panel">
+        <div class="builder-grid">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Line It Up Daily</p>
+                <h2>Challenges</h2>
+              </div>
+              <button id="new-liu-daily-btn" class="secondary-button">New challenge</button>
+            </div>
+            <div id="liu-daily-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="liu-daily-form" class="builder-form">
+              <input id="liu-daily-id" type="hidden" />
+              <h2 id="liu-daily-form-title">New challenge</h2>
+              <label>Date<input id="liu-daily-date" type="date" required /></label>
+              <label>Theme (e.g. Pop Culture Timeline)<input id="liu-daily-theme" type="text" required /></label>
+              <label>Order Description (e.g. Earliest to Latest)<input id="liu-daily-desc" type="text" placeholder="Explain the order logic" required /></label>
+              
+              <div class="liu-items-builder">
+                <h3>Items in Correct Order (1 to 5)</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                  <label style="margin: 0;">Item 1 Name<input id="liu-item-name-0" type="text" required /></label>
+                  <label style="margin: 0;">Item 2 Name<input id="liu-item-name-1" type="text" required /></label>
+                  <label style="margin: 0;">Item 3 Name<input id="liu-item-name-2" type="text" required /></label>
+                  <label style="margin: 0;">Item 4 Name<input id="liu-item-name-3" type="text" required /></label>
+                  <label style="margin: 0;">Item 5 Name<input id="liu-item-name-4" type="text" required /></label>
+                </div>
+              </div>
+
+              <label>AI Generation Prompt Helper (Optional)<textarea id="liu-daily-prompt" rows="3" placeholder="Enter ChatGPT image prompt style to document history"></textarea></label>
+              <button id="liu-suggest-prompt-btn" type="button" class="secondary-button" style="margin-bottom: 15px;">Suggest AI Prompt</button>
+
+              <label>Upload 1x5 Horizontal Grid Image (Transparent Background)<input id="liu-daily-image-file" type="file" accept="image/png,image/jpeg,image/webp" required /></label>
+              <div id="liu-daily-image-preview" class="image-preview">No image selected</div>
+              
+              <button type="submit">Save line it up daily challenge</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="contextual-panel" class="panel">
+        <div class="builder-grid wide-builder">
+          <section class="surface">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Contextual memory</p>
+                <h2>Levels</h2>
+              </div>
+              <button id="new-contextual-btn" class="secondary-button">New level</button>
+            </div>
+            <div id="contextual-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface">
+            <form id="contextual-form" class="builder-form">
+              <input id="contextual-id" type="hidden" />
+              <h2 id="contextual-form-title">New level</h2>
+              <div class="two-col">
+                <label>Level name<input id="contextual-level-name" type="text" required /></label>
+                <label>Questions to ask<input id="contextual-question-count" type="number" min="1" value="5" required /></label>
+              </div>
+              <div class="section-heading compact-heading">
+                <h3>Variations</h3>
+                <button id="add-variation-btn" type="button" class="secondary-button">Add variation</button>
+              </div>
+              <div id="variations-container"></div>
+              <button type="submit">Save contextual level</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="settings-panel" class="panel">
+        <div style="max-width: 640px; margin: 0 auto; width: 100%;">
+          <div class="surface" style="padding: 30px; border: 4px solid #1d1a17; border-radius: 8px; box-shadow: 6px 6px 0 #1d1a17; background: #fffdf6;">
+            <div class="section-heading" style="margin-bottom: 20px;">
+              <div>
+                <p class="eyebrow" style="margin-bottom: 5px;">System config</p>
+                <h2 style="font-size: 1.5rem; margin: 0;">Settings</h2>
+              </div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+              <h3 style="font-size: 1.15rem; margin-bottom: 8px; font-weight: bold; color: #1d1a17;">Stats Portal URL Link</h3>
+              <p class="muted" style="margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5; color: #706a60;">
+                This link configures the online stats portal where players can view and compare progress. It is stored as a public text file (<code>stats-url.txt</code>) in the <strong>daily-challenge</strong> storage bucket. The Unity client reads this URL dynamically on launch, allowing you to update it instantly without compiling new builds.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;">
+                <label for="global-stats-url-input" style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: #1f6f78; letter-spacing: 0.5px;">Portal URL Address</label>
+                <input id="global-stats-url-input" type="url" placeholder="https://..." style="width: 100%; min-height: 42px; font-size: 0.95rem; padding: 8px 12px; border: 3px solid #1d1a17; border-radius: 6px; background: #fffdf6; box-shadow: inset 2px 2px 0 rgba(29,26,23,0.05); font-family: inherit; margin: 0;" />
+              </div>
+
+              <button id="save-global-stats-url-btn" style="min-height: 42px; font-size: 0.95rem; padding: 0 24px; border: 3px solid #1d1a17; border-radius: 6px; background: #f6a21a; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #1d1a17; font-family: inherit; transition: transform 0.1s ease; box-shadow: 3px 3px 0 #1d1a17;">
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <dialog id="email-dialog">
+    <form method="dialog" class="modal-card">
+      <h2>Send email</h2>
+      <p id="email-dialog-recipient" class="muted"></p>
+      <label>Subject<input id="dialog-email-subject" type="text" /></label>
+      <label>Message<textarea id="dialog-email-body" rows="8"></textarea></label>
+      <div class="modal-actions">
+        <button value="cancel" class="secondary-button">Cancel</button>
+        <button id="dialog-send-email-btn" value="default">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="recipient-dialog">
+    <form method="dialog" class="modal-card recipient-modal">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow" id="recipient-dialog-eyebrow">Audience</p>
+          <h2 id="recipient-dialog-title">Review recipients</h2>
+        </div>
+        <span id="recipient-dialog-count" class="preset-count">0</span>
+      </div>
+      <p id="recipient-dialog-summary" class="muted"></p>
+      <div class="recipient-tools">
+        <label>Search
+          <input id="recipient-search" type="search" placeholder="Find a name or email" />
+        </label>
+        <label>Add by email
+          <span class="recipient-add-row">
+            <input id="recipient-manual-email" type="email" placeholder="player@example.com" />
+            <button id="recipient-add-email-btn" class="secondary-button" type="button">Add</button>
+          </span>
+        </label>
+      </div>
+      <div id="recipient-list" class="recipient-list"></div>
+      <div class="modal-actions">
+        <button value="cancel" class="secondary-button">Close</button>
+        <button id="recipient-apply-btn" type="button">Apply selection</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -752,12 +752,17 @@ body::before {
     align-items: center;
     padding: 10px 8px;
     box-sizing: border-box;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
     position: relative;
     user-select: none;
+    touch-action: none;
 }
 
-.card-slot:hover {
+.card-slot:not(.dragging) {
+    /* Smooth transitions when moving back to slots */
+}
+
+.card-slot:hover:not(.dragging) {
     transform: translateY(-5px) rotate(1deg);
     box-shadow: var(--shadow-hover);
 }
@@ -766,6 +771,13 @@ body::before {
     transform: translateY(-8px) scale(1.08) rotate(-1deg);
     border-color: var(--accent-red);
     box-shadow: 0 0 0 3px var(--bg-paper), 6px 6px 0px var(--accent-red);
+}
+
+.card-slot.dragging {
+    transition: none !important;
+    z-index: 1000 !important;
+    opacity: 0.9;
+    box-shadow: var(--shadow-hover) !important;
 }
 
 .card-slot img {

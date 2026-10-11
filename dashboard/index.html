@@ -6,6 +6,9 @@
   <title>Photo Memory Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="progress.css" />
+  <script defer src="insights.js"></script>
+  <script defer src="progress-view.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
@@ -44,10 +47,13 @@
         <img src="../assets/logo.png" alt="" />
         <span>Photo Memory</span>
       </a>
-      <div class="admin-card">
-        <span id="admin-role">Admin</span>
-        <strong id="admin-name">Loading...</strong>
-        <small id="admin-email"></small>
+      <div class="admin-card" style="display: flex; align-items: center; gap: 12px; padding: 12px;">
+        <img id="admin-avatar" class="user-avatar" src="" alt="" style="width: 48px; height: 48px; border-radius: 50%; border: 2.5px solid var(--line); display: none; object-fit: cover; flex-shrink: 0;" />
+        <div style="min-width: 0; flex-grow: 1; display: grid; gap: 3px;">
+          <span id="admin-role" style="width: fit-content;">Admin</span>
+          <strong id="admin-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">Loading...</strong>
+          <small id="admin-email" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"></small>
+        </div>
       </div>
       <nav class="side-nav" aria-label="Admin sections">
         <button class="active" data-tab="overview">Overview</button>
@@ -60,6 +66,7 @@
         <button data-admin-only data-tab="daily" hidden>Daily Challenges</button>
         <button data-admin-only data-tab="line-it-up-daily" hidden>Line It Up Daily</button>
         <button data-admin-only data-tab="contextual" hidden>Contextual Memory</button>
+        <button data-admin-only data-tab="settings" hidden>Settings</button>
       </nav>
       <button id="logout-btn" class="ghost-button">Logout</button>
     </aside>
@@ -80,25 +87,26 @@
       <p id="toast" class="toast" hidden></p>
 
       <section id="overview-panel" class="panel active">
-        <div class="metric-grid">
-          <article class="metric-card">
-            <span>Current streak</span>
-            <strong id="metric-current-streak">0</strong>
-          </article>
-          <article class="metric-card">
-            <span>Best streak</span>
-            <strong id="metric-longest-streak">0</strong>
-          </article>
-          <article class="metric-card">
-            <span>Average score</span>
-            <strong id="metric-average-score">0</strong>
-          </article>
-          <article class="metric-card">
-            <span>Tests logged</span>
-            <strong id="metric-tests">0</strong>
-          </article>
+        <section id="admin-insights" data-admin-only hidden></section>
+        <div class="progress-hero">
+          <div><p class="eyebrow">Your memory, in focus</p><h2>A little practice.<br>A clearer picture of your progress.</h2><p>See what is improving, find your next focus, and build a routine that lasts.</p></div>
+          <div class="progress-emblem" aria-hidden="true">◎</div>
         </div>
-
+        <div id="history-load-status" class="progress-error" role="status" hidden></div>
+        <div class="progress-toolbar"><h2>Training overview</h2><label for="progress-range">Show<select id="progress-range"><option value="0">All tests</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label></div>
+        <div class="progress-metrics">
+          <article class="surface"><span class="metric-label">Latest assessment</span><div id="progress-latest" class="progress-number">—</div><p class="progress-subtext">Out of 1,240 test points</p></article>
+          <article class="surface"><span class="metric-label">Recent change</span><div id="progress-change" class="progress-number">—</div><p id="progress-change-note" class="progress-subtext">Complete 4 tests to see a trend</p></article>
+          <article class="surface"><span class="metric-label">Training days</span><div id="progress-days" class="progress-number">—</div><p class="progress-subtext">Days with a dated test · last 28 days</p></article>
+          <article class="surface"><span class="metric-label">Tests in this view</span><div id="metric-tests" class="progress-number">—</div><p id="progress-best" class="progress-subtext">Your personal best will appear here</p></article>
+        </div>
+        <div class="progress-grid">
+          <section class="surface"><div class="section-heading"><div><p class="eyebrow">The bigger picture</p><h2>Assessment progress</h2></div><span class="pill">Same test · 5 skills</span></div><div id="progress-chart"></div><p id="progress-chart-note" class="progress-subtext"></p></section>
+          <section class="surface"><p class="eyebrow">Know your strengths</p><h2>Your skill balance</h2><div id="progress-skills"></div><p class="progress-subtext">Average of up to 5 recent tests, as a share of each skill’s maximum.</p></section>
+          <section class="surface"><p class="eyebrow">Small steps add up</p><h2>Your training rhythm</h2><div id="progress-calendar" class="calendar-grid"></div><div class="calendar-legend"><span>28 days ago</span><span>Today</span></div><p id="progress-date-note" class="progress-subtext"></p></section>
+          <section class="surface practice-card"><p class="eyebrow">Your next focus</p><h2 id="progress-focus-title">Start with an assessment</h2><p id="progress-focus-copy">Complete a full memory test in the app to build your baseline.</p><p id="progress-focus-note" class="progress-subtext">A practice suggestion based on your game results.</p></section>
+        </div>
+        <p class="report-note">These are game performance measures, not a clinical assessment or a measure of intelligence. Login streaks and training days are tracked separately.</p>
         <div class="overview-grid">
           <section class="surface">
             <div class="section-heading">
@@ -120,6 +128,16 @@
               <button class="secondary-button" data-jump="highscores">View all</button>
             </div>
             <div id="top-highscores-list" class="compact-list"></div>
+          </section>
+
+          <section class="surface" style="grid-column: 1 / -1;">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Network</p>
+                <h2>Friends</h2>
+              </div>
+            </div>
+            <div id="friends-list" class="compact-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;"></div>
           </section>
         </div>
       </section>
@@ -153,6 +171,13 @@
                 <button id="compare-player-btn" class="secondary-button" type="button">Compare</button>
                 <button id="clear-comparison-btn" class="secondary-button" type="button">Clear</button>
               </div>
+            </div>
+            <div class="highscore-control-row" style="margin-top: 10px;">
+              <label>Or select a friend to compare
+                <select id="compare-friend-select">
+                  <option value="">Choose a friend...</option>
+                </select>
+              </label>
             </div>
           </div>
           <div id="comparison-summary" class="comparison-summary"></div>
@@ -519,7 +544,7 @@
               </div>
               <button id="new-daily-btn" class="secondary-button">New challenge</button>
             </div>
-            <div id="daily-list" class="compact-list"></div>
+             <div id="daily-list" class="compact-list"></div>
           </section>
 
           <section class="surface">
@@ -614,6 +639,35 @@
               <button type="submit">Save contextual level</button>
             </form>
           </section>
+        </div>
+      </section>
+
+      <section id="settings-panel" class="panel">
+        <div style="max-width: 640px; margin: 0 auto; width: 100%;">
+          <div class="surface" style="padding: 30px; border: 4px solid #1d1a17; border-radius: 8px; box-shadow: 6px 6px 0 #1d1a17; background: #fffdf6;">
+            <div class="section-heading" style="margin-bottom: 20px;">
+              <div>
+                <p class="eyebrow" style="margin-bottom: 5px;">System config</p>
+                <h2 style="font-size: 1.5rem; margin: 0;">Settings</h2>
+              </div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+              <h3 style="font-size: 1.15rem; margin-bottom: 8px; font-weight: bold; color: #1d1a17;">Stats Portal URL Link</h3>
+              <p class="muted" style="margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5; color: #706a60;">
+                This link configures the online stats portal where players can view and compare progress. It is stored as a public text file (<code>stats-url.txt</code>) in the <strong>daily-challenge</strong> storage bucket. The Unity client reads this URL dynamically on launch, allowing you to update it instantly without compiling new builds.
+              </p>
+              
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;">
+                <label for="global-stats-url-input" style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: #1f6f78; letter-spacing: 0.5px;">Portal URL Address</label>
+                <input id="global-stats-url-input" type="url" placeholder="https://..." style="width: 100%; min-height: 42px; font-size: 0.95rem; padding: 8px 12px; border: 3px solid #1d1a17; border-radius: 6px; background: #fffdf6; box-shadow: inset 2px 2px 0 rgba(29,26,23,0.05); font-family: inherit; margin: 0;" />
+              </div>
+
+              <button id="save-global-stats-url-btn" style="min-height: 42px; font-size: 0.95rem; padding: 0 24px; border: 3px solid #1d1a17; border-radius: 6px; background: #f6a21a; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #1d1a17; font-family: inherit; transition: transform 0.1s ease; box-shadow: 3px 3px 0 #1d1a17;">
+                Save Settings
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </main>

@@ -24,7 +24,12 @@ const HIGHSCORE_FIELDS = {
   highscore_4: 'Number Chain',
   highscore_5: 'Image Color',
   lbs_highscore: 'Lightbulb Sequence',
-  party_mode_score: 'Party Mode'
+  party_mode_score: 'Party Mode',
+  spatial_points: 'Line It Up Points',
+  spatial_wins: 'Line It Up Wins',
+  spatial_losses: 'Line It Up Losses',
+  spatial_draws: 'Line It Up Draws',
+  spatial_league: 'Line It Up League'
 };
 
 const HIGHSCORE_ICONS = {
@@ -39,6 +44,12 @@ const HIGHSCORE_ICONS = {
 
 const MEMORY_TYPE_SCORE_FIELDS = Object.keys(HIGHSCORE_ICONS);
 const HIGHSCORE_GROUPS = [
+  {
+    id: 'line-it-up',
+    eyebrow: 'Line It Up Division',
+    title: 'Line It Up Stats',
+    fields: ['spatial_points', 'spatial_wins', 'spatial_losses', 'spatial_draws', 'spatial_league']
+  },
   {
     id: 'memory-types',
     eyebrow: 'Memory type-based games',
@@ -78,13 +89,15 @@ const HIGHSCORE_GROUPS = [
 ];
 const LEADERBOARD_PAGE_SIZE = 15;
 
-const ADMIN_TABS = new Set(['users', 'mail', 'notifications', 'daily', 'line-it-up-daily', 'contextual']);
+const ADMIN_TABS = new Set(['users', 'mail', 'notifications', 'daily', 'line-it-up-daily', 'contextual', 'settings']);
 
 const state = {
   session: null,
   otpEmail: '',
   currentProfile: null,
+  friends: [],
   scoresHistory: [],
+  historyError: '',
   leaderboardUsers: [],
   leaderboardError: '',
   leaderboardPage: 1,
@@ -263,6 +276,122 @@ function getUserName(user) {
   return user?.username || user?.email?.split('@')[0] || 'Unnamed user';
 }
 
+const LEAGUE_NAMES = ["Sand League", "Stone League", "Iron League", "Bronze League", "Silver League", "Gold League", "Emerald League", "Sapphire League", "Royal League", "Legendary League"];
+function getLeagueName(index) {
+  return LEAGUE_NAMES[Number(index || 0)] || "Sand League";
+}
+
+function getAvatarUrl(avatarVal, username) {
+  if (!avatarVal) {
+    return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(username || 'user')}`;
+  }
+  if (avatarVal.startsWith('http://') || avatarVal.startsWith('https://')) {
+    return avatarVal;
+  }
+  if (avatarVal.startsWith('avatar_')) {
+    const filename = avatarVal.endsWith('.png') ? avatarVal : `${avatarVal}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/daily-challenge/avatars/${filename}`;
+  }
+  return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(avatarVal)}`;
+}
+
+async function loadFriends() {
+  if (!state.session) return [];
+  const myUserId = state.session.user.id;
+  try {
+    const { data: friendships, error: friendshipError } = await client
+      .from('friendships')
+      .select('user_id, friend_id')
+      .eq('status', 'accepted');
+
+    if (friendshipError) throw friendshipError;
+
+    const friendIds = [];
+    (friendships || []).forEach(f => {
+      if (f.user_id && f.user_id !== myUserId) friendIds.push(f.user_id);
+      if (f.friend_id && f.friend_id !== myUserId) friendIds.push(f.friend_id);
+    });
+
+    if (friendIds.length === 0) return [];
+    const { data: profiles, error: profileError } = await client
+      .from('user_profiles')
+      .select('id, username, avatar_url, spatial_points, spatial_wins, spatial_losses, spatial_draws, spatial_league')
+      .in('id', friendIds);
+
+    if (profileError) throw profileError;
+    return profiles || [];
+  } catch (ex) {
+    console.error("Failed to load friends:", ex);
+    return [];
+  }
+}
+
+function renderFriends() {
+  const select = $('#compare-friend-select');
+  if (select) {
+    const currentSelectedVal = select.value;
+    select.innerHTML = '<option value="">Choose a friend...</option>' + (state.friends || []).map(friend => `
+      <option value="${friend.id}">${escapeHtml(getUserName(friend))}</option>
+    `).join('');
+    if (currentSelectedVal && (state.friends || []).some(f => f.id === currentSelectedVal)) {
+      select.value = currentSelectedVal;
+    }
+  }
+
+  const list = $('#friends-list');
+  if (list) {
+    list.innerHTML = (state.friends || []).map(friend => {
+      const avatarUrl = getAvatarUrl(friend.avatar_url, getUserName(friend));
+      return `
+        <div class="compact-item friendship-item" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; background: #fff; border: 1.5px solid rgba(29, 26, 23, 0.12); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+            <img class="user-avatar" src="${avatarUrl}" alt="" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0;" />
+            <div style="min-width: 0;">
+              <strong style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(getUserName(friend))}</strong>
+              <small class="muted" style="display: block; font-size: 0.72rem;">League: ${escapeHtml(getLeagueName(friend.spatial_league))} • ${Number(friend.spatial_points || 0)} pts</small>
+            </div>
+          </div>
+          <button class="secondary-button" onclick="compareFriend('${friend.id}')" style="min-height: 28px; padding: 0 8px; font-size: 0.75rem; flex-shrink: 0;">Compare</button>
+        </div>
+      `;
+    }).join('') || '<p class="muted" style="grid-column: 1 / -1; padding: 12px;">No friends yet. Add friends inside the mobile/Unity app!</p>';
+  }
+}
+
+async function comparePlayerById(userId) {
+  if (!userId) {
+    clearComparison();
+    return;
+  }
+  const friend = (state.friends || []).find(f => f.id === userId);
+  if (!friend) return;
+
+  state.comparisonUserId = friend.id;
+  state.comparisonUser = friend;
+  state.comparisonEmail = ''; 
+  const inputEmail = $('#compare-player-email');
+  if (inputEmail) inputEmail.value = '';
+  const inputEmailLb = $('#leaderboard-compare-email');
+  if (inputEmailLb) inputEmailLb.value = '';
+
+  const existingIndex = state.leaderboardUsers.findIndex((user) => user.id === friend.id);
+  if (existingIndex === -1) state.leaderboardUsers.push(friend);
+  else state.leaderboardUsers[existingIndex] = { ...state.leaderboardUsers[existingIndex], ...friend };
+
+  renderHighscores();
+  renderLeaderboard();
+  toast(`Comparing with ${getUserName(friend)}.`);
+}
+
+window.compareFriend = function(friendId) {
+  const select = $('#compare-friend-select');
+  if (select) {
+    select.value = friendId;
+  }
+  switchTab('highscores');
+  comparePlayerById(friendId);
+};
+
 function matchesLeaderboardSearch(user, query) {
   if (!query) return true;
 
@@ -308,6 +437,7 @@ function profileColumns() {
   return [
     'id',
     'username',
+    'avatar_url',
     'is_pro',
     'current_streak',
     'longest_streak',
@@ -322,6 +452,7 @@ function legacyProfileColumns() {
   return [
     'id',
     'username',
+    'avatar_url',
     'is_pro',
     'current_streak',
     'longest_streak',
@@ -400,6 +531,7 @@ async function loadCurrentProfile() {
 
 async function loadScoresHistory() {
   state.scoresHistory = [];
+  state.historyError = '';
   const userId = state.session?.user?.id;
   if (!userId) return;
 
@@ -407,15 +539,17 @@ async function loadScoresHistory() {
     .from('user-data')
     .list(userId, { limit: 1, search: 'test_history.json' });
 
-  if (listError || !files?.some((file) => file.name === 'test_history.json')) return;
+  if (listError) { state.historyError = 'Your test history could not be loaded. Refresh to try again.'; return; }
+  if (!files?.some((file) => file.name === 'test_history.json')) return;
 
   const { data: blob, error } = await client.storage.from('user-data').download(`${userId}/test_history.json`);
-  if (error) return;
+  if (error) { state.historyError = 'Your test history could not be downloaded. Refresh to try again.'; return; }
 
   try {
     const parsed = JSON.parse(await blob.text());
     state.scoresHistory = Array.isArray(parsed?.scoresHistory) ? parsed.scoresHistory : [];
   } catch (_error) {
+    state.historyError = 'Your saved history could not be read. Your results have not been deleted.';
     state.scoresHistory = [];
   }
 }
@@ -505,12 +639,14 @@ async function lookupComparisonProfile(email) {
 
 async function loadUserDashboard() {
   await loadCurrentProfile();
+  state.friends = await loadFriends();
   await Promise.all([loadScoresHistory(), loadLeaderboardData()]);
   renderShell();
   renderUserOverview();
   renderHistory();
   renderHighscores();
   renderLeaderboard();
+  renderFriends();
   renderAdminGate();
 }
 
@@ -528,10 +664,24 @@ async function loadAdminDashboard() {
   state.dailyChallenges = dailyResult.challenges || [];
   state.lineItUpChallenges = liuDailyResult.challenges || [];
   state.contextualLevels = contextualResult.levels || [];
+  renderAdminInsights();
   renderUsers();
   renderDailyList();
   renderLineItUpDailyList();
   renderContextualList();
+
+  try {
+    const { data: blob, error: downloadError } = await client.storage
+      .from('daily-challenge')
+      .download('stats-url.txt');
+    if (!downloadError && blob) {
+      const text = await blob.text();
+      const input = $('#global-stats-url-input');
+      if (input) input.value = text.trim();
+    }
+  } catch (err) {
+    console.warn('Failed to load stats-url.txt from storage:', err);
+  }
 }
 
 async function refreshAll() {
@@ -554,6 +704,13 @@ function renderShell() {
   $('#admin-email').textContent = profile.email || '';
   $('#admin-name').textContent = getUserName(profile);
   $('#admin-role').textContent = state.isAdmin ? 'Admin' : (profile.is_pro ? 'Pro player' : 'Player');
+
+  const avatarUrl = getAvatarUrl(profile.avatar_url, getUserName(profile));
+  const avatarImg = $('#admin-avatar');
+  if (avatarImg) {
+    avatarImg.src = avatarUrl;
+    avatarImg.style.display = 'block';
+  }
 }
 
 function renderAdminGate() {
@@ -596,17 +753,14 @@ function renderHighscoreIcon(field, size = '') {
 
 function renderUserOverview() {
   const profile = state.currentProfile || {};
-  $('#metric-current-streak').textContent = Number(profile.current_streak || 0);
-  $('#metric-longest-streak').textContent = Number(profile.longest_streak || 0);
-  $('#metric-average-score').textContent = calculateAverageScore(profile);
-  $('#metric-tests').textContent = state.scoresHistory.length;
+  window.renderPhotoMemoryProgress(state.scoresHistory, state.historyError);
 
   const recent = [...state.scoresHistory].slice(-5).reverse();
   $('#recent-tests-list').innerHTML = recent.map((test, index) => `
     <div class="compact-item">
       <div>
         <strong>Test ${state.scoresHistory.length - index}</strong>
-        <small>Total score: ${Number(test.totalScore || 0)}</small>
+        <small>${PhotoMemoryInsights.dateOf(test) ? escapeHtml(formatDate(test.completedAtUtc)) : 'Date not recorded'} · ${Number(test.totalScore || 0)} / 1,240 points</small>
       </div>
       <span class="pill">${Number(test.scores?.length || 0)} skills</span>
     </div>
@@ -622,6 +776,20 @@ function renderUserOverview() {
       <span class="pill good">${item.score}</span>
     </div>
   `).join('') || '<p class="muted">Play a few games to fill this in.</p>';
+}
+
+function renderAdminInsights() {
+  const container = $('#admin-insights');
+  if (!container || !state.isAdmin) return;
+  const users = state.adminUsers;
+  const cutoff = Date.now() - 7 * 86400000;
+  const recent = users.filter(u => Date.parse(u.created_at) >= cutoff).length;
+  const signedIn = users.filter(u => Date.parse(u.last_sign_in_at) >= cutoff).length;
+  const verified = users.filter(u => u.email_confirmed_at).length;
+  const profiles = users.filter(u => typeof u.is_pro === 'boolean');
+  const pro = profiles.filter(u => u.is_pro).length;
+  const metric = (label,value,note) => `<article class="surface"><span class="metric-label">${label}</span><div class="progress-number">${value.toLocaleString()}</div><p class="progress-subtext">${note}</p></article>`;
+  container.innerHTML = `<div class="progress-toolbar"><div><p class="eyebrow">Studio overview · admin only</p><h2>Your audience at a glance</h2></div></div><div class="progress-metrics">${metric('Accounts',users.length,`${verified.toLocaleString()} with confirmed email`)}${metric('New accounts',recent,'Created in the last 7 days')}${metric('Recent sign-ins',signedIn,'Last sign-in within 7 days; not daily active players')}${metric('Pro profile flags',pro,`${profiles.length.toLocaleString()} profiles with a known status`)}</div><p class="progress-subtext">Pro flags are the app’s mirrored status, not verified billing or revenue. ${users.length-profiles.length} accounts have no loaded subscription status. Retention and purchase conversion need session and purchase events; this dashboard does not infer them from login streaks.</p>`;
 }
 
 function renderHistory() {
@@ -666,15 +834,35 @@ function renderHighscoreCards(fields) {
 
   return fields.map((field) => {
     const label = HIGHSCORE_FIELDS[field];
-    const userScore = Number(current?.[field] || 0);
-    const compareScore = comparisonUser ? Number(comparisonUser?.[field] || 0) : null;
-    const comparisonClass = comparisonUser
-      ? userScore > compareScore
-        ? 'you-win'
-        : compareScore > userScore
-          ? 'they-win'
-          : 'tie'
-      : '';
+    
+    let userScore, compareScore;
+    let comparisonClass = '';
+    
+    if (field === 'spatial_league') {
+      const uLvl = Number(current?.[field] || 0);
+      const cLvl = comparisonUser ? Number(comparisonUser?.[field] || 0) : 0;
+      userScore = getLeagueName(uLvl);
+      compareScore = comparisonUser ? getLeagueName(cLvl) : null;
+      comparisonClass = comparisonUser
+        ? uLvl > cLvl
+          ? 'you-win'
+          : cLvl > uLvl
+            ? 'they-win'
+            : 'tie'
+        : '';
+    } else {
+      const uVal = Number(current?.[field] || 0);
+      const cVal = comparisonUser ? Number(comparisonUser?.[field] || 0) : 0;
+      userScore = uVal;
+      compareScore = comparisonUser ? cVal : null;
+      comparisonClass = comparisonUser
+        ? uVal > cVal
+          ? 'you-win'
+          : cVal > uVal
+            ? 'they-win'
+            : 'tie'
+        : '';
+    }
 
     return `
       <article class="highscore-card ${HIGHSCORE_ICONS[field] ? 'with-icon' : ''} ${comparisonUser ? 'comparison-card' : ''} ${comparisonClass}">
@@ -693,6 +881,32 @@ function renderHighscoreCards(fields) {
           ` : `<strong>${userScore}</strong>`}
         </div>
       </article>
+    `;
+  }).join('');
+}
+
+function scoreReportRows(fields, comparisonUser = null) {
+  const current = state.currentProfile || {};
+  return fields.map((field) => {
+    let userVal = current[field];
+    let compareVal = comparisonUser ? comparisonUser[field] : null;
+    if (field === 'spatial_league') {
+      userVal = getLeagueName(userVal);
+      if (comparisonUser) {
+        compareVal = getLeagueName(compareVal);
+      }
+    } else {
+      userVal = Number(userVal || 0);
+      if (comparisonUser) {
+        compareVal = Number(compareVal || 0);
+      }
+    }
+    return `
+      <tr>
+        <td>${escapeHtml(HIGHSCORE_FIELDS[field])}</td>
+        <td>${userVal}</td>
+        ${comparisonUser ? `<td>${compareVal}</td>` : ''}
+      </tr>
     `;
   }).join('');
 }
@@ -817,6 +1031,8 @@ function clearComparison() {
   state.comparisonUserId = '';
   state.comparisonUser = null;
   state.comparisonEmail = '';
+  const select = $('#compare-friend-select');
+  if (select) select.value = '';
   renderHighscores();
   renderLeaderboard();
 }
@@ -859,21 +1075,12 @@ function reportMetric(label, value) {
   return `<div class="report-metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
 }
 
-function scoreReportRows(fields, comparisonUser = null) {
-  const current = state.currentProfile || {};
-  return fields.map((field) => `
-    <tr>
-      <td>${escapeHtml(HIGHSCORE_FIELDS[field])}</td>
-      <td>${Number(current[field] || 0)}</td>
-      ${comparisonUser ? `<td>${Number(comparisonUser[field] || 0)}</td>` : ''}
-    </tr>
-  `).join('');
-}
 
 function buildOverviewReport() {
-  const recentRows = [...state.scoresHistory].slice(-10).reverse().map((test, index) => `
+  const insights = PhotoMemoryInsights.summarize(state.scoresHistory, { days: Number($('#progress-range').value) });
+  const recentRows = insights.tests.slice(-10).reverse().map((test) => `
     <tr>
-      <td>Test ${state.scoresHistory.length - index}</td>
+      <td>Test ${test.ordinal}</td>
       <td>${Number(test.totalScore || 0)}</td>
       <td>${Number(test.scores?.length || 0)}</td>
     </tr>
@@ -889,11 +1096,13 @@ function buildOverviewReport() {
   return `
     <h2>Overview</h2>
     <div class="report-grid">
-      ${reportMetric('Current streak', Number(state.currentProfile?.current_streak || 0))}
-      ${reportMetric('Best streak', Number(state.currentProfile?.longest_streak || 0))}
-      ${reportMetric('Average score', calculateAverageScore(state.currentProfile))}
-      ${reportMetric('Tests logged', state.scoresHistory.length)}
+      ${reportMetric('Latest assessment / 1,240', insights.latest?.totalScore ?? 'No tests')}
+      ${reportMetric('Recent change (points)', insights.delta == null ? 'Need 4 tests' : Math.round(insights.delta))}
+      ${reportMetric('Training days in last 28 days', insights.activeDays)}
+      ${reportMetric('Tests in selected period', insights.count)}
     </div>
+    <p>Recent change compares the last ${insights.windowSize} with the preceding ${insights.windowSize} tests. ${insights.undated} older tests have no date. Game performance only, not a clinical or intelligence assessment.</p>
+    ${state.historyError ? `<p>${escapeHtml(state.historyError)}</p>` : ''}
     <h3>Recent Tests</h3>
     <table><thead><tr><th>Test</th><th>Total score</th><th>Skills</th></tr></thead><tbody>${recentRows || '<tr><td colspan="3">No tests logged.</td></tr>'}</tbody></table>
     <h3>Top High Scores</h3>
@@ -1382,7 +1591,8 @@ function switchTab(tab) {
     mail: 'Mail Studio',
     notifications: 'Push Notifications',
     daily: 'Daily Challenges',
-    contextual: 'Contextual Memory'
+    contextual: 'Contextual Memory',
+    settings: 'Settings'
   }[tab] || 'Dashboard';
   document.body.classList.remove('sidebar-open');
   history.replaceState(null, '', `#${tab}`);
@@ -2722,18 +2932,6 @@ function initMailStudio() {
     $('#mail-images-status').textContent = mailInlineImages.length ? `${mailInlineImages.length} images added to canvas` : 'No uploaded images';
   });
 
-  $('#generate-ai-prompt-btn')?.addEventListener('click', () => {
-    const desc = $('#mail-ai-desc').value.trim() || 'A monthly updates email giving players visual streak tips';
-    const promptText = [
-      'Write a premium responsive email HTML template themed around this request:',
-      `"${desc}"`,
-      '',
-      'Wrap the final complete HTML document in <TO COPY> and </TO COPY> tags. Include inline CSS and keep it email friendly.'
-    ].join('\n');
-    copyToClipboard(promptText)
-      .then(() => toast('ChatGPT prompt copied to clipboard.'))
-      .catch(() => toast('Failed to copy to clipboard automatically.', true));
-  });
 
   $('#extract-ai-mail-btn')?.addEventListener('click', () => {
     const responseText = $('#mail-ai-response').value;
@@ -2863,8 +3061,34 @@ function attachEventListeners() {
 
   $('#logout-btn').addEventListener('click', () => client.auth.signOut());
   $('#refresh-btn').addEventListener('click', refreshAll);
+  $('#progress-range').addEventListener('change', () => window.renderPhotoMemoryProgress(state.scoresHistory, state.historyError));
   $('#export-report-btn').addEventListener('click', exportActiveReport);
   $('#menu-btn').addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+
+  $('#save-global-stats-url-btn')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const input = $('#global-stats-url-input');
+    const urlText = input?.value.trim();
+    if (!urlText) {
+      toast('Please enter a valid URL', true);
+      return;
+    }
+    
+    setBusy(button, true, 'Saving...');
+    try {
+      const blob = new Blob([urlText], { type: 'text/plain' });
+      const { error } = await client.storage
+        .from('daily-challenge')
+        .upload('stats-url.txt', blob, { upsert: true });
+        
+      if (error) throw error;
+      toast('Online Stats Portal URL updated successfully!');
+    } catch (err) {
+      toast(`Failed to save: ${err.message}`, true);
+    } finally {
+      setBusy(button, false);
+    }
+  });
 
   $$('.side-nav button').forEach((button) => {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
@@ -2891,6 +3115,10 @@ function attachEventListeners() {
 
   ['clear-comparison-btn', 'leaderboard-clear-comparison-btn'].forEach((id) => {
     $(`#${id}`)?.addEventListener('click', clearComparison);
+  });
+
+  $('#compare-friend-select')?.addEventListener('change', (event) => {
+    comparePlayerById(event.target.value);
   });
 
   $('#leaderboard-search')?.addEventListener('input', (event) => {
@@ -3213,18 +3441,12 @@ async function saveLineItUpDailyChallenge(event) {
     const promptVal = $('#liu-daily-prompt').value.trim();
     const originalImageFile = await fileToUploadPayload($('#liu-daily-image-file').files[0]);
     
-    let slices = [];
-    if ($('#liu-daily-image-file').files[0]) {
-      slices = await sliceImageToUploadPayloads($('#liu-daily-image-file').files[0]);
-    }
-    
     const items = [];
     for (let i = 0; i < 5; i++) {
       const name = $(`#liu-item-name-${i}`).value.trim();
       items.push({
         name,
-        correct_index: i,
-        imageFile: slices[i] || null
+        correct_index: i
       });
     }
     
@@ -3252,10 +3474,10 @@ async function saveLineItUpDailyChallenge(event) {
 
 function suggestLiuPrompt() {
   const suggestion = {
-    theme: 'Market Treats by Hidden Count',
+    theme: 'Magic Potions by Bubble Count',
     desc: 'Find the hidden order.',
-    items: ['Lemon Tart', 'Berry Pie', 'Apple Basket', 'Orange Stand', 'Grape Bowl'],
-    prompt: 'Create one 1x5 horizontal strip of five separate square rounded-corner icon cards in this exact order: Lemon Tart, Berry Pie, Apple Basket, Orange Stand, Grape Bowl. Hide the order through countable details: the lemon tart has 1 small lemon slice, the berry pie has 2 berries, the apple basket has 3 apples, the orange stand has 4 oranges, and the grape bowl has 5 grape clusters. Each card has transparent background outside the rounded tile, a simple warm flat colored tile inside, and a centered cartoony subject. The rounded tile itself has no outline, no border, and no stroke. Match the attached coffee mug icon style: flat cartoony illustration, clean dark subject outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no arrows, no labels, no UI, no logos.'
+    items: ['Lesser Healing Potion', 'Minor Mana Flask', 'Elixir of Agility', 'Grand Intellect Brew', 'Ancient Rejuve Chalice'],
+    prompt: 'Create one single horizontal sprite-sheet image containing five separate square rounded-corner icon cards side-by-side (1 row by 5 panels) in this exact order: Lesser Healing Potion, Minor Mana Flask, Elixir of Agility, Grand Intellect Brew, Ancient Rejuve Chalice. Ensure that the five individual panel images are perfectly squared (1:1 aspect ratio). Do NOT output multiple files or a zip archive, only a single image. The hidden ordering rule is the count of glowing bubbles rising inside the liquid (exactly 1, 2, 3, 4, and 5 bubbles respectively). Introduce visual deception: make the physical flask/bottle sizes vary randomly so the user is tempted to order by bottle size, but the actual key is strictly the bubble count. Each of the five panels contains a complete square rounded-corner card with a fully blank solid flat white background (pure #FFFFFF, no checkerboards, no gradients, no shadows) outside and behind the rounded tile, a simple warm flat colored tile inside, and a centered cartoony bottle. The rounded tile itself has no outline, no border, and no stroke. Match the style: flat cartoony illustration, clean dark outline, subtle flat shading, warm highlight, consistent scale and camera angle, no text, no numbers, no labels, no UI.'
   };
 
   $('#liu-daily-theme').value = suggestion.theme;
